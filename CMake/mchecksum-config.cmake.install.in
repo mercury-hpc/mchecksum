@@ -1,0 +1,26 @@
+#-----------------------------------------------------------------------------
+# Config file for compiling against the build directory
+#-----------------------------------------------------------------------------
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+#-----------------------------------------------------------------------------
+# Directories
+#-----------------------------------------------------------------------------
+set(MCHECKSUM_INCLUDE_DIR "@MCHECKSUM_INCLUDES_INSTALL_TIME@")
+
+#-----------------------------------------------------------------------------
+# Version Strings
+#-----------------------------------------------------------------------------
+set(MCHECKSUM_VERSION_STRING  @MCHECKSUM_PACKAGE_VERSION@)
+set(MCHECKSUM_VERSION_MAJOR   @MCHECKSUM_VERSION_MAJOR@)
+set(MCHECKSUM_VERSION_MINOR   @MCHECKSUM_VERSION_MINOR@)
+set(MCHECKSUM_VERSION_PATCH   @MCHECKSUM_VERSION_PATCH@)
+
+#-----------------------------------------------------------------------------
+# Don't include targets if this file is being picked up by another
+# project which has already build MCHECKSUM as a subproject
+#-----------------------------------------------------------------------------
+if(NOT TARGET "MCHECKSUM" AND NOT MCHECKSUM_INSTALL_SKIP_TARGETS)
+  include(${SELF_DIR}/mchecksum-targets.cmake)
+endif(NOT TARGET "MCHECKSUM" AND NOT MCHECKSUM_INSTALL_SKIP_TARGETS)
+

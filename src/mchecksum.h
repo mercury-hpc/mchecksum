@@ -8,14 +8,14 @@
  * found at the root of the source code distribution tree.
  */
 
-#ifndef MERCURY_CHECKSUM_H
-#define MERCURY_CHECKSUM_H
+#ifndef MCHECKSUM_H
+#define MCHECKSUM_H
 
-#include "mercury_util_config.h"
+#include "mchecksum_config.h"
 
-typedef void *hg_checksum_t;
+typedef void *mchecksum_object_t;
 
-#define HG_CHECKSUM_NULL ((hg_checksum_t)0)
+#define MCHECKSUM_OBJECT_NULL ((mchecksum_object_t)0)
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +29,8 @@ extern "C" {
  *
  * \return Non-negative on success or negative on failure
  */
-HG_UTIL_EXPORT int
-hg_checksum_init(const char *hash_method, hg_checksum_t *checksum);
+MCHECKSUM_EXPORT int
+mchecksum_init(const char *hash_method, mchecksum_object_t *checksum);
 
 /**
  * Destroy the checksum.
@@ -39,8 +39,8 @@ hg_checksum_init(const char *hash_method, hg_checksum_t *checksum);
  *
  * \return Non-negative on success or negative on failure
  */
-HG_UTIL_EXPORT int
-hg_checksum_destroy(hg_checksum_t checksum);
+MCHECKSUM_EXPORT int
+mchecksum_destroy(mchecksum_object_t checksum);
 
 /**
  * Reset the checksum.
@@ -49,8 +49,8 @@ hg_checksum_destroy(hg_checksum_t checksum);
  *
  * \return Non-negative on success or negative on failure
  */
-HG_UTIL_EXPORT int
-hg_checksum_reset(hg_checksum_t checksum);
+MCHECKSUM_EXPORT int
+mchecksum_reset(mchecksum_object_t checksum);
 
 /**
  * Get size of checksum.
@@ -59,8 +59,8 @@ hg_checksum_reset(hg_checksum_t checksum);
  *
  * \return Non-negative value
  */
-HG_UTIL_EXPORT size_t
-hg_checksum_get_size(hg_checksum_t checksum);
+MCHECKSUM_EXPORT size_t
+mchecksum_get_size(mchecksum_object_t checksum);
 
 /**
  * Get checksum and copy it into buf.
@@ -72,8 +72,8 @@ hg_checksum_get_size(hg_checksum_t checksum);
  *
  * \return Non-negative on success or negative on failure
  */
-HG_UTIL_EXPORT int
-hg_checksum_get(hg_checksum_t checksum, void *buf, size_t size, int finalize);
+MCHECKSUM_EXPORT int
+mchecksum_get(mchecksum_object_t checksum, void *buf, size_t size, int finalize);
 
 /**
  * Accumulates a partial checksum of the input data.
@@ -84,11 +84,11 @@ hg_checksum_get(hg_checksum_t checksum, void *buf, size_t size, int finalize);
  *
  * \return Non-negative on success or negative on failure
  */
-HG_UTIL_EXPORT int
-hg_checksum_update(hg_checksum_t checksum, const void *data, size_t size);
+MCHECKSUM_EXPORT int
+mchecksum_update(mchecksum_object_t checksum, const void *data, size_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MERCURY_CHECKSUM_H */
+#endif /* MCHECKSUM_H */

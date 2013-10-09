@@ -8,29 +8,29 @@
  * found at the root of the source code distribution tree.
  */
 
-#include "mercury_checksum_crc16.h"
-#include "mercury_util_error.h"
+#include "mchecksum_crc16.h"
+#include "mchecksum_error.h"
 
 #include <stdlib.h>
 
-static int hg_checksum_crc16_destroy(hg_checksum_class_t *checksum_class);
-static int hg_checksum_crc16_reset(hg_checksum_class_t *checksum_class);
-static size_t hg_checksum_crc16_get_size(hg_checksum_class_t *checksum_class);
-static int hg_checksum_crc16_get(hg_checksum_class_t *checksum_class,
+static int mchecksum_crc16_destroy(mchecksum_class_t *checksum_class);
+static int mchecksum_crc16_reset(mchecksum_class_t *checksum_class);
+static size_t mchecksum_crc16_get_size(mchecksum_class_t *checksum_class);
+static int mchecksum_crc16_get(mchecksum_class_t *checksum_class,
         void *buf, size_t size, int finalize);
-static int hg_checksum_crc16_update(hg_checksum_class_t *checksum_class,
+static int mchecksum_crc16_update(mchecksum_class_t *checksum_class,
         const void *data, size_t size);
 
-static hg_checksum_class_t hg_checksum_crc16_g = {
+static mchecksum_class_t mchecksum_crc16_g = {
         NULL,
-        hg_checksum_crc16_destroy,
-        hg_checksum_crc16_reset,
-        hg_checksum_crc16_get_size,
-        hg_checksum_crc16_get,
-        hg_checksum_crc16_update
+        mchecksum_crc16_destroy,
+        mchecksum_crc16_reset,
+        mchecksum_crc16_get_size,
+        mchecksum_crc16_get,
+        mchecksum_crc16_update
 };
 
-static const hg_util_uint16_t table_[256] = {
+static const mchecksum_uint16_t table_[256] = {
         0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
         0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
         0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
@@ -79,7 +79,7 @@ gen_table(void)
     unsigned int col = 0;
 
     for (i = 0; i < 256; i++) {
-        hg_util_uint16_t part = i;
+        mchecksum_uint16_t part = i;
 
         for (j = 0; j < 8; j++) {
             if (part & 1)
@@ -100,25 +100,25 @@ gen_table(void)
 
 /*---------------------------------------------------------------------------*/
 int
-hg_checksum_crc16_init(hg_checksum_class_t *checksum_class)
+mchecksum_crc16_init(mchecksum_class_t *checksum_class)
 {
-    int ret = HG_UTIL_SUCCESS;
+    int ret = MCHECKSUM_SUCCESS;
 
     if (!checksum_class) {
-        HG_UTIL_ERROR_DEFAULT("NULL checksum class");
-        ret = HG_UTIL_FAIL;
+        MCHECKSUM_ERROR_DEFAULT("NULL checksum class");
+        ret = MCHECKSUM_FAIL;
     }
 
-    *checksum_class = hg_checksum_crc16_g;
+    *checksum_class = mchecksum_crc16_g;
 
-    checksum_class->data = malloc(sizeof(hg_util_uint16_t));
+    checksum_class->data = malloc(sizeof(mchecksum_uint16_t));
     if (!checksum_class->data) {
-        HG_UTIL_ERROR_DEFAULT("Could not allocate private data");
-        ret = HG_UTIL_FAIL;
+        MCHECKSUM_ERROR_DEFAULT("Could not allocate private data");
+        ret = MCHECKSUM_FAIL;
         goto done;
     }
 
-    *(hg_util_uint16_t*) checksum_class->data = INITIALCRC;
+    *(mchecksum_uint16_t*) checksum_class->data = INITIALCRC;
 
 done:
     return ret;
@@ -126,43 +126,43 @@ done:
 
 /*---------------------------------------------------------------------------*/
 static int
-hg_checksum_crc16_destroy(hg_checksum_class_t *checksum_class)
+mchecksum_crc16_destroy(mchecksum_class_t *checksum_class)
 {
     free(checksum_class->data);
 
-    return HG_UTIL_SUCCESS;
+    return MCHECKSUM_SUCCESS;
 }
 
 /*---------------------------------------------------------------------------*/
 static int
-hg_checksum_crc16_reset(hg_checksum_class_t *checksum_class)
+mchecksum_crc16_reset(mchecksum_class_t *checksum_class)
 {
-    *(hg_util_uint16_t*) checksum_class->data = INITIALCRC;
+    *(mchecksum_uint16_t*) checksum_class->data = INITIALCRC;
 
-    return HG_UTIL_SUCCESS;
+    return MCHECKSUM_SUCCESS;
 }
 
 /*---------------------------------------------------------------------------*/
 static size_t
-hg_checksum_crc16_get_size(hg_checksum_class_t HG_UTIL_UNUSED *checksum_class)
+mchecksum_crc16_get_size(mchecksum_class_t MCHECKSUM_UNUSED *checksum_class)
 {
-    return sizeof(hg_util_uint16_t);
+    return sizeof(mchecksum_uint16_t);
 }
 
 /*---------------------------------------------------------------------------*/
 static int
-hg_checksum_crc16_get(hg_checksum_class_t *checksum_class,
-        void *buf, size_t size, int HG_UTIL_UNUSED finalize)
+mchecksum_crc16_get(mchecksum_class_t *checksum_class,
+        void *buf, size_t size, int MCHECKSUM_UNUSED finalize)
 {
-    int ret = HG_UTIL_SUCCESS;
+    int ret = MCHECKSUM_SUCCESS;
 
-    if (size < sizeof(hg_util_uint16_t)) {
-        HG_UTIL_ERROR_DEFAULT("Buffer is too small to store checksum");
-        ret = HG_UTIL_FAIL;
+    if (size < sizeof(mchecksum_uint16_t)) {
+        MCHECKSUM_ERROR_DEFAULT("Buffer is too small to store checksum");
+        ret = MCHECKSUM_FAIL;
         goto done;
     }
 
-    *(hg_util_uint16_t*) buf = *(hg_util_uint16_t*) checksum_class->data;
+    *(mchecksum_uint16_t*) buf = *(mchecksum_uint16_t*) checksum_class->data;
 
 done:
     return ret;
@@ -170,16 +170,16 @@ done:
 
 /*---------------------------------------------------------------------------*/
 static int
-hg_checksum_crc16_update(hg_checksum_class_t *checksum_class,
+mchecksum_crc16_update(mchecksum_class_t *checksum_class,
         const void *data, size_t size)
 {
     const unsigned char *cur = (const unsigned char *) data;
     const unsigned char *end = cur + size;
-    hg_util_uint16_t *state = (hg_util_uint16_t*) checksum_class->data;
+    mchecksum_uint16_t *state = (mchecksum_uint16_t*) checksum_class->data;
 
     while (cur < end) {
         *state = (*state >> 8) ^ table_[(*state ^ *cur++) & 0xff];
     }
 
-    return HG_UTIL_SUCCESS;
+    return MCHECKSUM_SUCCESS;
 }
