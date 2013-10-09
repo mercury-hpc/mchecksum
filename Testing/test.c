@@ -73,8 +73,8 @@ main(int argc, char *argv[])
     hash1 = malloc(hash_size);
     hash2 = malloc(hash_size);
 
-    mchecksum_get(checksum1, hash1, hash_size, 0);
-    mchecksum_get(checksum2, hash2, hash_size, 0);
+    mchecksum_get(checksum1, hash1, hash_size, 1);
+    mchecksum_get(checksum2, hash2, hash_size, 1);
 
     /*
     printf("Checksum of buf1 is: %016lX\n",
@@ -102,7 +102,7 @@ main(int argc, char *argv[])
     for (i = 0; i < BUF_SIZE_X; i++) {
         mchecksum_update(checksum2, buf2[i], BUF_SIZE_Y * sizeof(int));
     }
-    mchecksum_get(checksum2, hash2, hash_size, 0);
+    mchecksum_get(checksum2, hash2, hash_size, 1);
 
     if (strncmp(hash1, hash2, hash_size) == 0) {
         fprintf(stderr, "Checksums should not match\n");
