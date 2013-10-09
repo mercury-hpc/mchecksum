@@ -25,6 +25,7 @@ extern "C" {
  * Initialize the checksum with the specified hash method.
  *
  * \param hash_method [IN]      hash method string
+ *                              Available methods are: "crc16", "crc64"
  * \param checksum [OUT]        pointer to abstract checksum
  *
  * \return Non-negative on success or negative on failure
@@ -68,7 +69,8 @@ mchecksum_get_size(mchecksum_object_t checksum);
  * \param checksum [IN/OUT]     abstract checksum
  * \param buf [IN]              pointer to buffer
  * \param size [IN]             size of buffer
- * \param finalize [IN]         boolean
+ * \param finalize [IN]         boolean (must be 1 if no more update needs to
+ *                              be done and the checksum can be finalized)
  *
  * \return Non-negative on success or negative on failure
  */
