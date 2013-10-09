@@ -21,10 +21,15 @@
 int
 mchecksum_init(const char *hash_method, mchecksum_object_t *checksum)
 {
-    mchecksum_class_t *checksum_class;
+    struct mchecksum_class *checksum_class = NULL;
     int ret = MCHECKSUM_SUCCESS;
 
-    checksum_class = (mchecksum_class_t *) malloc(sizeof(mchecksum_class_t));
+    checksum_class = (struct mchecksum_class *) malloc(sizeof(struct mchecksum_class));
+    if (!checksum_class) {
+        MCHECKSUM_ERROR_DEFAULT("Could not allocate checksum class");
+        ret = MCHECKSUM_FAIL;
+        goto done;
+    }
 
     if (strcmp(hash_method, "crc64") == 0) {
         if (mchecksum_crc64_init(checksum_class) != MCHECKSUM_SUCCESS) {
