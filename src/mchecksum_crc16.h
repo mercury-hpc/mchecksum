@@ -25,7 +25,7 @@ extern "C" {
  * \return Non-negative on success or negative on failure
  */
 MCHECKSUM_EXPORT int
-mchecksum_crc16_init(mchecksum_class_t *checksum_class);
+mchecksum_crc16_init(struct mchecksum_class *checksum_class);
 
 #ifdef __cplusplus
 }

@@ -23,18 +23,16 @@
 #endif
 
 /* Checksum class definition */
-typedef struct mchecksum_class mchecksum_class_t;
-
 struct mchecksum_class {
     /* Private data */
     void *data;
     /* Callbacks */
-    int (*destroy)(mchecksum_class_t *checksum_class);
-    int (*reset)(mchecksum_class_t *checksum_class);
-    size_t (*get_size)(mchecksum_class_t *checksum_class);
-    int (*get)(mchecksum_class_t *checksum_class,
+    int (*destroy)(struct mchecksum_class *checksum_class);
+    int (*reset)(struct mchecksum_class *checksum_class);
+    size_t (*get_size)(struct mchecksum_class *checksum_class);
+    int (*get)(struct mchecksum_class *checksum_class,
             void *buf, size_t size, int finalize);
-    int (*update)(mchecksum_class_t *checksum_class,
+    int (*update)(struct mchecksum_class *checksum_class,
             const void *data, size_t size);
 };
 

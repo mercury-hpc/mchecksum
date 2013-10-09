@@ -63,7 +63,7 @@ done:
 int
 mchecksum_destroy(mchecksum_object_t checksum)
 {
-    mchecksum_class_t *checksum_class = (mchecksum_class_t *) checksum;
+    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
     int ret = MCHECKSUM_SUCCESS;
 
     if (!checksum_class) {
@@ -88,7 +88,7 @@ done:
 int
 mchecksum_reset(mchecksum_object_t checksum)
 {
-    mchecksum_class_t *checksum_class = (mchecksum_class_t *) checksum;
+    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
 
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
@@ -102,7 +102,7 @@ mchecksum_reset(mchecksum_object_t checksum)
 size_t
 mchecksum_get_size(mchecksum_object_t checksum)
 {
-    mchecksum_class_t *checksum_class = (mchecksum_class_t *) checksum;
+    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
 
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
@@ -116,7 +116,7 @@ mchecksum_get_size(mchecksum_object_t checksum)
 int
 mchecksum_get(mchecksum_object_t checksum, void *buf, size_t size, int finalize)
 {
-    mchecksum_class_t *checksum_class = (mchecksum_class_t *) checksum;
+    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
 
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
@@ -130,7 +130,7 @@ mchecksum_get(mchecksum_object_t checksum, void *buf, size_t size, int finalize)
 int
 mchecksum_update(mchecksum_object_t checksum, const void *data, size_t size)
 {
-    mchecksum_class_t *checksum_class = (mchecksum_class_t *) checksum;
+    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
 
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");

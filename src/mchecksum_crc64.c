@@ -13,15 +13,15 @@
 
 #include <stdlib.h>
 
-static int mchecksum_crc64_destroy(mchecksum_class_t *checksum_class);
-static int mchecksum_crc64_reset(mchecksum_class_t *checksum_class);
-static size_t mchecksum_crc64_get_size(mchecksum_class_t *checksum_class);
-static int mchecksum_crc64_get(mchecksum_class_t *checksum_class,
+static int mchecksum_crc64_destroy(struct mchecksum_class *checksum_class);
+static int mchecksum_crc64_reset(struct mchecksum_class *checksum_class);
+static size_t mchecksum_crc64_get_size(struct mchecksum_class *checksum_class);
+static int mchecksum_crc64_get(struct mchecksum_class *checksum_class,
         void *buf, size_t size, int finalize);
-static int mchecksum_crc64_update(mchecksum_class_t *checksum_class,
+static int mchecksum_crc64_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size);
 
-static mchecksum_class_t mchecksum_crc64_g = {
+static struct mchecksum_class mchecksum_crc64_g = {
         NULL,
         mchecksum_crc64_destroy,
         mchecksum_crc64_reset,
@@ -197,7 +197,7 @@ gen_table(void)
 
 /*---------------------------------------------------------------------------*/
 int
-mchecksum_crc64_init(mchecksum_class_t *checksum_class)
+mchecksum_crc64_init(struct mchecksum_class *checksum_class)
 {
     int ret = MCHECKSUM_SUCCESS;
 
@@ -223,7 +223,7 @@ done:
 
 /*---------------------------------------------------------------------------*/
 static int
-mchecksum_crc64_destroy(mchecksum_class_t *checksum_class)
+mchecksum_crc64_destroy(struct mchecksum_class *checksum_class)
 {
     free(checksum_class->data);
 
@@ -232,7 +232,7 @@ mchecksum_crc64_destroy(mchecksum_class_t *checksum_class)
 
 /*---------------------------------------------------------------------------*/
 static int
-mchecksum_crc64_reset(mchecksum_class_t *checksum_class)
+mchecksum_crc64_reset(struct mchecksum_class *checksum_class)
 {
     *(mchecksum_uint64_t*) checksum_class->data = INITIALCRC;
 
@@ -241,14 +241,14 @@ mchecksum_crc64_reset(mchecksum_class_t *checksum_class)
 
 /*---------------------------------------------------------------------------*/
 static size_t
-mchecksum_crc64_get_size(mchecksum_class_t MCHECKSUM_UNUSED *checksum_class)
+mchecksum_crc64_get_size(struct mchecksum_class MCHECKSUM_UNUSED *checksum_class)
 {
     return sizeof(mchecksum_uint64_t);
 }
 
 /*---------------------------------------------------------------------------*/
 static int
-mchecksum_crc64_get(mchecksum_class_t *checksum_class,
+mchecksum_crc64_get(struct mchecksum_class *checksum_class,
         void *buf, size_t size, int MCHECKSUM_UNUSED finalize)
 {
     int ret = MCHECKSUM_SUCCESS;
@@ -267,7 +267,7 @@ done:
 
 /*---------------------------------------------------------------------------*/
 static int
-mchecksum_crc64_update(mchecksum_class_t *checksum_class,
+mchecksum_crc64_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size)
 {
     const unsigned char *cur = (const unsigned char *) data;
