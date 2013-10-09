@@ -187,7 +187,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
 #-----------------------------------------------------------------------------
 option(BUILD_TESTING "Build testing." OFF)
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED AND BUILD_TESTING)
-#  enable_testing()
+  enable_testing()
 #  include(CTest)
   add_subdirectory(Testing)
 endif()

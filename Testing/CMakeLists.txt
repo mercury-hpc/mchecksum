@@ -14,15 +14,15 @@ include_directories(
 #------------------------------------------------------------------------------
 # Set up tests
 #------------------------------------------------------------------------------
-add_executable(test test.c)
-target_link_libraries(test mchecksum)
+add_executable(simple_test simple_test.c)
+target_link_libraries(simple_test mchecksum)
 if(MCHECKSUM_ENABLE_COVERAGE)
-  set_coverage_flags(test)
+  set_coverage_flags(simple_test)
 endif()
 
 set(TEST_HASH_TYPES crc16 crc64)
 foreach(hash_type ${TEST_HASH_TYPES})
   add_test(NAME "${hash_type}"
-    COMMAND $<TARGET_FILE:test> "${hash_type}"
+    COMMAND $<TARGET_FILE:simple_test> "${hash_type}"
   )
 endforeach()
