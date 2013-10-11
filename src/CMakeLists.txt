@@ -64,7 +64,7 @@ target_link_libraries(mchecksum
 #  ${MCHECKSUM_EXPORTED_LIBS}
 #  ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
 )
-set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})
+mchecksum_set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})
 if(MCHECKSUM_ENABLE_COVERAGE)
   set_coverage_flags(mchecksum)
 endif()

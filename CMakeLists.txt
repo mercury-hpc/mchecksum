@@ -102,7 +102,7 @@ option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 option(MCHECKSUM_ENABLE_VERBOSE_ERROR "Print error messages to stderr." ON)
 
 #-------------------------------------------------------------------------------
-function(set_lib_options libtarget libname libtype)
+function(mchecksum_set_lib_options libtarget libname libtype)
   if(${libtype} MATCHES "SHARED")
     if(WIN32 AND NOT MINGW)
       set(LIB_RELEASE_NAME "${libname}")
@@ -153,21 +153,23 @@ endfunction()
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-option(MCHECKSUM_ENABLE_COVERAGE "Enable coverage." OFF)
-if(MCHECKSUM_ENABLE_COVERAGE)
-  set(COVERAGE_FLAGS "-fprofile-arcs -ftest-coverage" CACHE STRING
-    "Flags to the coverage program that CTest uses to perform coverage inspection"
-  )
-  mark_as_advanced(COVERAGE_FLAGS)
-endif()
+if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
+  option(MCHECKSUM_ENABLE_COVERAGE "Enable coverage." OFF)
+  if(MCHECKSUM_ENABLE_COVERAGE)
+    set(COVERAGE_FLAGS "-fprofile-arcs -ftest-coverage" CACHE STRING
+      "Flags to the coverage program that CTest uses to perform coverage inspection"
+    )
+    mark_as_advanced(COVERAGE_FLAGS)
+  endif()
 
-macro(set_coverage_flags target)
-  set_target_properties(${target}
-    PROPERTIES
-      COMPILE_FLAGS ${COVERAGE_FLAGS}
-      LINK_FLAGS ${COVERAGE_FLAGS}
-  )
-endmacro()
+  macro(set_coverage_flags target)
+    set_target_properties(${target}
+      PROPERTIES
+        COMPILE_FLAGS ${COVERAGE_FLAGS}
+        LINK_FLAGS ${COVERAGE_FLAGS}
+    )
+  endmacro()
+endif()
 
 #-----------------------------------------------------------------------------
 # Source
@@ -250,16 +252,18 @@ endif()
 #-----------------------------------------------------------------------------
 # CPack
 #-----------------------------------------------------------------------------
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${MCHECKSUM_SOURCE_DIR}/README)
-set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Generic Checksum Library")
-set(CPACK_PACKAGE_NAME "MChecksum")
-set(CPACK_PACKAGE_VENDOR "Argonne National Laboratories / The HDF Group")
-set(CPACK_PACKAGE_VERSION_MAJOR ${MCHECKSUM_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${MCHECKSUM_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${MCHECKSUM_VERSION_PATCH})
-set(CPACK_GENERATOR "TBZ2")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME ${MCHECKSUM_PACKAGE_TARNAME}-${MCHECKSUM_PACKAGE_VERSION})
-set(CPACK_SOURCE_IGNORE_FILES ".git*;/GitSetup/;/.git/;.swp$;.#;/#;.*~")
-set(CPACK_SOURCE_STRIP_FILES "")
-include(CPack)
+if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
+  set(CPACK_PACKAGE_DESCRIPTION_FILE ${MCHECKSUM_SOURCE_DIR}/README)
+  set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Generic Checksum Library")
+  set(CPACK_PACKAGE_NAME "MChecksum")
+  set(CPACK_PACKAGE_VENDOR "Argonne National Laboratories / The HDF Group")
+  set(CPACK_PACKAGE_VERSION_MAJOR ${MCHECKSUM_VERSION_MAJOR})
+  set(CPACK_PACKAGE_VERSION_MINOR ${MCHECKSUM_VERSION_MINOR})
+  set(CPACK_PACKAGE_VERSION_PATCH ${MCHECKSUM_VERSION_PATCH})
+  set(CPACK_GENERATOR "TBZ2")
+  set(CPACK_SOURCE_PACKAGE_FILE_NAME ${MCHECKSUM_PACKAGE_TARNAME}-${MCHECKSUM_PACKAGE_VERSION})
+  set(CPACK_SOURCE_IGNORE_FILES ".git*;/GitSetup/;/.git/;.swp$;.#;/#;.*~")
+  set(CPACK_SOURCE_STRIP_FILES "")
+  include(CPack)
+endif()

@@ -18,7 +18,7 @@ set(MCHECKSUM_VERSION_PATCH   @MCHECKSUM_VERSION_PATCH@)
 
 #-----------------------------------------------------------------------------
 # Don't include targets if this file is being picked up by another
-# project which has already build MCHECKSUM as a subproject
+# project which has already built MCHECKSUM as a subproject
 #-----------------------------------------------------------------------------
 if(NOT TARGET "MCHECKSUM" AND NOT MCHECKSUM_INSTALL_SKIP_TARGETS)
   include(${SELF_DIR}/mchecksum-targets.cmake)
