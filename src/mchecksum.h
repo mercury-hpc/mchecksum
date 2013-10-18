@@ -17,6 +17,9 @@ typedef void *mchecksum_object_t;
 
 #define MCHECKSUM_OBJECT_NULL ((mchecksum_object_t)0)
 
+#define MCHECKSUM_NOFINALIZE  0
+#define MCHECKSUM_FINALIZE    1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,8 +72,12 @@ mchecksum_get_size(mchecksum_object_t checksum);
  * \param checksum [IN/OUT]     abstract checksum
  * \param buf [IN]              pointer to buffer
  * \param size [IN]             size of buffer
- * \param finalize [IN]         boolean (must be 1 if no more update needs to
- *                              be done and the checksum can be finalized)
+ * \param finalize [IN]         one of:
+ *       MCHECKSUM_FINALIZE     no more data will be added to this checksum
+ *                              (only valid call to follow is reset or
+ *                              destroy)
+ *       MCHECKSUM_NOFINALIZE   More data might be added to this checksum
+ *                              later
  *
  * \return Non-negative on success or negative on failure
  */
