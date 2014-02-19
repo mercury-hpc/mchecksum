@@ -84,6 +84,20 @@ install(
   RUNTIME DESTINATION ${MCHECKSUM_INSTALL_BIN_DIR}
 )
 
+# This may not be the conventional way of doing things but we need a dirty hack
+# to have targets exported into multiple locations
+if(MCHECKSUM_EXTERNALLY_CONFIGURED AND MCHECKSUM_EXTERNAL_EXPORTED_TARGETS)
+install(
+  TARGETS
+    mchecksum
+  EXPORT
+    ${MCHECKSUM_EXTERNAL_EXPORTED_TARGETS}
+  LIBRARY DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
+  RUNTIME DESTINATION ${MCHECKSUM_INSTALL_BIN_DIR}
+)
+endif()
+
 #-----------------------------------------------------------------------------
 # Specify project header files to be installed
 #-----------------------------------------------------------------------------
@@ -121,7 +135,7 @@ install(
 # Export all exported targets to the build tree for use by parent project
 #-----------------------------------------------------------------------------
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
-EXPORT (
+export(
   TARGETS
     ${MCHECKSUM_EXPORTED_LIBS}
   FILE
