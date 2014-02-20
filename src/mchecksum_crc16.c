@@ -107,6 +107,7 @@ mchecksum_crc16_init(struct mchecksum_class *checksum_class)
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("NULL checksum class");
         ret = MCHECKSUM_FAIL;
+        goto done;
     }
 
     *checksum_class = mchecksum_crc16_g;
