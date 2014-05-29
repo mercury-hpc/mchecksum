@@ -53,6 +53,7 @@ set(MCHECKSUM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc16.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc64.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.c
 )
 
 #----------------------------------------------------------------------------

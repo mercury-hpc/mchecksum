@@ -14,6 +14,12 @@
 
 #include "mchecksum_error.h"
 
+#define HAVE_ZLIB
+
+#ifdef HAVE_ZLIB
+#include "mchecksum_zlib.h"
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -43,7 +49,21 @@ mchecksum_init(const char *hash_method, mchecksum_object_t *checksum)
             ret = MCHECKSUM_FAIL;
             goto done;
         }
-    } else {
+#ifdef HAVE_ZLIB
+    } else if (strcmp(hash_method, "crc32") == 0) {
+        if (mchecksum_crc32_init(checksum_class) != MCHECKSUM_SUCCESS) {
+            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc32 checksum");
+            ret = MCHECKSUM_FAIL;
+            goto done;
+        }
+    } else if (strcmp(hash_method, "adler32") == 0) {
+        if (mchecksum_adler32_init(checksum_class) != MCHECKSUM_SUCCESS) {
+            MCHECKSUM_ERROR_DEFAULT("Could not initialize adler32 checksum");
+            ret = MCHECKSUM_FAIL;
+            goto done;
+        }
+#endif
+     } else {
         MCHECKSUM_ERROR_DEFAULT("Unknown hash method");
         ret = MCHECKSUM_FAIL;
         goto done;
