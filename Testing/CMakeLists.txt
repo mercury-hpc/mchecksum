@@ -1,6 +1,20 @@
 #------------------------------------------------------------------------------
 # Set up test options
 #------------------------------------------------------------------------------
+set(MCHECKSUM_HASH_TYPES crc16 crc64)
+
+# mchecksum_prefix is added to executable
+function(add_mchecksum_test test_name)
+  add_executable(mchecksum_test_${test_name} test_${test_name}.c)
+  target_link_libraries(mchecksum_test_${test_name} mchecksum)
+  if(MCHECKSUM_ENABLE_COVERAGE)
+    set_coverage_flags(mchecksum_test_${test_name})
+  endif()
+  foreach(hash_type ${MCHECKSUM_HASH_TYPES})
+    add_test(NAME mchecksum_test_${test_name}_${hash_type}
+      COMMAND $<TARGET_FILE:mchecksum_test_${test_name}> "${hash_type}")
+  endforeach()
+endfunction()
 
 #------------------------------------------------------------------------------
 # Dependencies
@@ -14,15 +28,5 @@ include_directories(
 #------------------------------------------------------------------------------
 # Set up tests
 #------------------------------------------------------------------------------
-add_executable(simple_test simple_test.c)
-target_link_libraries(simple_test mchecksum)
-if(MCHECKSUM_ENABLE_COVERAGE)
-  set_coverage_flags(simple_test)
-endif()
-
-set(TEST_HASH_TYPES crc16 crc64)
-foreach(hash_type ${TEST_HASH_TYPES})
-  add_test(NAME "${hash_type}"
-    COMMAND $<TARGET_FILE:simple_test> "${hash_type}"
-  )
-endforeach()
+add_mchecksum_test(simple)
+add_mchecksum_test(perf)
