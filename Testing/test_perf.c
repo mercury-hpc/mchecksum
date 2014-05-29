@@ -9,6 +9,7 @@
  */
 
 #include "mchecksum.h"
+#include "mchecksum_error.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -115,12 +116,6 @@ main(int argc, char *argv[])
         goto done;
     }
 
-    if (strcmp(argv[1], "crc16") && strcmp(argv[1], "crc64")) {
-        fprintf(stderr, "%s is not a valid parameter\n", argv[1]);
-        ret = EXIT_FAILURE;
-        goto done;
-    }
-
     hash_method = argv[1];
 
     /* Initialize buf */
@@ -139,7 +134,13 @@ main(int argc, char *argv[])
             "Bandwidth (MB/s)", FIELD_WIDTH, "Average Time (ms)");
     fflush(stdout);
 
-    mchecksum_init(hash_method, &checksum);
+    if (mchecksum_init(hash_method, &checksum) != MCHECKSUM_SUCCESS)
+    {
+       fprintf (stderr, "Error in mchecksum_init!\n");
+       ret = EXIT_FAILURE;
+       goto done;
+    }
+
     hash_size = mchecksum_get_size(checksum);
     hash = malloc(hash_size);
     if (!hash) {
