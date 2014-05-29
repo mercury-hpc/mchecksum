@@ -8,17 +8,13 @@
  * found at the root of the source code distribution tree.
  */
 
-#include "mchecksum_private.h"
 #include "mchecksum_crc64.h"
 #include "mchecksum_crc16.h"
-
-#include "mchecksum_error.h"
-
-#define HAVE_ZLIB
-
-#ifdef HAVE_ZLIB
+#ifdef MCHECKSUM_HAS_ZLIB
 #include "mchecksum_zlib.h"
 #endif
+
+#include "mchecksum_error.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -49,7 +45,7 @@ mchecksum_init(const char *hash_method, mchecksum_object_t *checksum)
             ret = MCHECKSUM_FAIL;
             goto done;
         }
-#ifdef HAVE_ZLIB
+#ifdef MCHECKSUM_HAS_ZLIB
     } else if (strcmp(hash_method, "crc32") == 0) {
         if (mchecksum_crc32_init(checksum_class) != MCHECKSUM_SUCCESS) {
             MCHECKSUM_ERROR_DEFAULT("Could not initialize crc32 checksum");

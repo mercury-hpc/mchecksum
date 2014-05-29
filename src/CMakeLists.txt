@@ -6,6 +6,24 @@
 #   ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
 #   ...
 # )
+option(MCHECKSUM_USE_ZLIB "Use ZLIB checksum." OFF)
+if(MCHECKSUM_USE_ZLIB)
+  find_package(ZLIB REQUIRED)
+  if(ZLIB_FOUND)
+    message(STATUS "ZLIB include directory: ${ZLIB_INCLUDE_DIRS}")
+    set(MCHECKSUM_HAS_ZLIB 1)
+    set(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES ${ZLIB_INCLUDE_DIRS}
+      ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
+    )
+    set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ZLIB_LIBRARIES}
+      ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
+    )
+  else()
+    message(FATAL_ERROR "Could not find ZLIB, please check ZLIB_INCLUDE_DIRS.")
+  endif()
+endif()
+
+include_directories(${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
   
 #------------------------------------------------------------------------------
 # Internal dependencies
@@ -53,8 +71,14 @@ set(MCHECKSUM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc16.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc64.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.c
 )
+
+if(MCHECKSUM_HAS_ZLIB)
+  set(MCHECKSUM_SRCS
+    ${MCHECKSUM_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.c
+  )
+endif()
 
 #----------------------------------------------------------------------------
 # Libraries
@@ -63,7 +87,7 @@ set(MCHECKSUM_SRCS
 add_library(mchecksum ${MCHECKSUM_SRCS})
 target_link_libraries(mchecksum
 #  ${MCHECKSUM_EXPORTED_LIBS}
-#  ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
+  ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
 )
 mchecksum_set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})
 if(MCHECKSUM_ENABLE_COVERAGE)

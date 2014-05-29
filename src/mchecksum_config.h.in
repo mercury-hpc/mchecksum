@@ -27,6 +27,8 @@
     #define MCHECKSUM_ABI_HIDDEN
 #endif
 
+#cmakedefine MCHECKSUM_HAS_ZLIB
+
 #cmakedefine MCHECKSUM_HAVE_VERBOSE_ERROR
 
 #cmakedefine MCHECKSUM_BUILD_SHARED_LIBS
