@@ -235,7 +235,7 @@ install(
 #-----------------------------------------------------------------------------
 # For automake compatibility, also a provide a pkgconfig file
 #-----------------------------------------------------------------------------
-if(NOT WIN32 AND NOT APPLE)
+if(NOT WIN32)
   configure_file(
     ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum.pc.in
     ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum.pc @ONLY
