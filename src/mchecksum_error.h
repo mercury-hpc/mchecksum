@@ -32,14 +32,14 @@
 /* Default error macro */
 #ifdef MCHECKSUM_HAVE_VERBOSE_ERROR
   #include <stdio.h>
-  #define MCHECKSUM_ERROR_DEFAULT(x) {              \
+  #define MCHECKSUM_ERROR_DEFAULT(x) do {         \
         fprintf(stderr, "Error "                  \
                 "in %s:%d (%s): "                 \
                 "%s.\n",                          \
                 __FILE__, __LINE__, __func__, x); \
-  }
+  } while(0)
 #else
-  #define MCHECKSUM_ERROR_DEFAULT(x)
+  #define MCHECKSUM_ERROR_DEFAULT(x) (void)0
 #endif
 
 #endif /* MCHECKSUM_ERROR_H */
