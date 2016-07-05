@@ -188,7 +188,9 @@ set(MCHECKSUM_INCLUDES_INSTALL_TIME
 
 # Pkg-config configuration
 if(NOT WIN32)
-  string(TOLOWER ${CMAKE_BUILD_TYPE} lower_cmake_build_type)
+  if(CMAKE_BUILD_TYPE)
+    string(TOLOWER ${CMAKE_BUILD_TYPE} lower_cmake_build_type)
+  endif()
 
   foreach(exported_lib ${MCHECKSUM_EXPORTED_LIBS})
     if(lower_cmake_build_type MATCHES "debug")
