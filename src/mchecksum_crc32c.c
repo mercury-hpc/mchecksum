@@ -12,7 +12,6 @@
 #include "mchecksum_error.h"
 
 #include <stdlib.h>
-#include <endian.h>
 #ifdef MCHECKSUM_HAS_SSE4_2
   #include <nmmintrin.h>
   #ifdef __x86_64__
@@ -199,8 +198,7 @@ mchecksum_crc32c_get(struct mchecksum_class *checksum_class,
             (*(mchecksum_uint32_t *) checksum_class->data)
                 ^ ~(mchecksum_uint32_t) 0;
 
-    *(mchecksum_uint32_t *) buf =
-        le32toh(*(mchecksum_uint32_t *) checksum_class->data);
+    *(mchecksum_uint32_t *) buf = *(mchecksum_uint32_t *) checksum_class->data;
 
 done:
     return ret;
