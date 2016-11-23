@@ -20,7 +20,7 @@ Software requirements
 =====================
 
 CRC32 and Adler32 checksums require ZLIB to be installed on your system.
-CRC32C can be used with or without SSE4.2 acceleration --- SSE4.2
+CRC32C can be used with or without SSE4.2 acceleration -- SSE4.2
 requires the SSE4.2 instruction set to be supported by your CPU.
 
 Building
