@@ -1,11 +1,34 @@
 cmake_minimum_required(VERSION 2.8.5 FATAL_ERROR)
+
+# Setup cmake policies.
+foreach(p
+    CMP0012
+    CMP0013
+    CMP0014
+    CMP0022 # CMake 2.8.12
+    CMP0025 # CMake 3.0
+    CMP0053 # CMake 3.1
+    CMP0054 # CMake 3.1
+  )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
+
+# Set a consistent MACOSX_RPATH default across all CMake versions.
+# When CMake 2.8.12 is required, change this default to 1.
+# When CMake 3.0.0 is required, remove this block (see CMP0042).
+if(NOT DEFINED CMAKE_MACOSX_RPATH)
+  set(CMAKE_MACOSX_RPATH 0)
+endif()
+
 project(MCHECKSUM C)
 
 #------------------------------------------------------------------------------
 # Version information 
 #------------------------------------------------------------------------------
 set(MCHECKSUM_VERSION_MAJOR "0")
-set(MCHECKSUM_VERSION_MINOR "1")
+set(MCHECKSUM_VERSION_MINOR "2")
 set(MCHECKSUM_VERSION_PATCH "0")
 set(MCHECKSUM_PACKAGE "mchecksum")
 set(MCHECKSUM_PACKAGE_NAME "MCHECKSUM")
@@ -34,18 +57,29 @@ endif()
 #------------------------------------------------------------------------------
 # Setup CMake Environment
 #------------------------------------------------------------------------------
-# Setup cmake policies.
-foreach(policy CMP0012 CMP0013 CMP0014)
-  if(POLICY ${policy})
-    cmake_policy(SET ${policy} NEW)
-  endif()
-endforeach()
+if(APPLE AND NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
+  # We are doing a unix-style install i.e. everything will be installed in
+  # CMAKE_INSTALL_PREFIX/bin and CMAKE_INSTALL_PREFIX/lib etc. as on other unix
+  # platforms. We still need to setup CMAKE_INSTALL_NAME_DIR correctly so that
+  # the binaries point to appropriate location for the libraries.
 
-foreach(policy CMP0017)
-  if(POLICY ${policy})
-    cmake_policy(SET ${policy} OLD)
+  # 1. Make CMAKE_INSTALL_PREFIX publicly accessible, if it was hidden in
+  #    previous pass
+  get_property(is_internal CACHE CMAKE_INSTALL_PREFIX PROPERTY TYPE)
+  if(is_internal STREQUAL "INTERNAL")
+    set(CMAKE_INSTALL_PREFIX ${CACHED_CMAKE_INSTALL_PREFIX} CACHE PATH "Install prefix" FORCE)
+  else()
+    set(CMAKE_INSTALL_PREFIX ${CACHED_CMAKE_INSTALL_PREFIX} CACHE PATH "Install prefix")
   endif()
-endforeach()
+  unset(MACOSX_APP_INSTALL_PREFIX CACHE)
+
+  set(CMAKE_INSTALL_NAME_DIR "@rpath")
+  mark_as_advanced(
+    CMAKE_OSX_ARCHITECTURES
+    CMAKE_OSX_DEPLOYMENT_TARGET
+    CMAKE_OSX_SYSROOT
+    )
+endif()
 
 #------------------------------------------------------------------------------
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
@@ -177,14 +211,6 @@ endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 #-----------------------------------------------------------------------------
-# Build doxygen documentation.
-#-----------------------------------------------------------------------------
-#option(BUILD_DOCUMENTATION "Build documentation." OFF)
-#if(BUILD_DOCUMENTATION)
-#  add_subdirectory(Documentation/Doxygen)
-#endif()
-
-#-----------------------------------------------------------------------------
 # Testing
 #-----------------------------------------------------------------------------
 option(BUILD_TESTING "Build testing." OFF)
@@ -218,7 +244,7 @@ install(
 )
 
 #-----------------------------------------------------------------------------
-# Configure the hdf5-config-version .cmake file for the install directory
+# Configure the mchecksum-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------
 configure_file(
   ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum-config-version.cmake.in
@@ -257,7 +283,7 @@ if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
   set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Generic Checksum Library")
   set(CPACK_PACKAGE_NAME "MChecksum")
-  set(CPACK_PACKAGE_VENDOR "Argonne National Laboratories / The HDF Group")
+  set(CPACK_PACKAGE_VENDOR "Argonne National Laboratory / The HDF Group")
   set(CPACK_PACKAGE_VERSION_MAJOR ${MCHECKSUM_VERSION_MAJOR})
   set(CPACK_PACKAGE_VERSION_MINOR ${MCHECKSUM_VERSION_MINOR})
   set(CPACK_PACKAGE_VERSION_PATCH ${MCHECKSUM_VERSION_PATCH})

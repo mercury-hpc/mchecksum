@@ -1,7 +1,6 @@
 #------------------------------------------------------------------------------
 # Set up test options
 #------------------------------------------------------------------------------
-set(MCHECKSUM_HASH_TYPES crc16 crc64)
 
 # mchecksum_prefix is added to executable
 function(add_mchecksum_test test_name)

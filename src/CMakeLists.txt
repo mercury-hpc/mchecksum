@@ -1,11 +1,26 @@
 #------------------------------------------------------------------------------
-# External dependencies
+# Include source and build directories
+#------------------------------------------------------------------------------
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+#------------------------------------------------------------------------------
+# Internal dependencies
 #------------------------------------------------------------------------------
 # nothing for now
-# set(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES
-#   ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
-#   ...
+# add_subdirectory()
+# include_directories(
+#  ${CMAKE_CURRENT_SOURCE_DIR}/...
+#  ${CMAKE_CURRENT_BINARY_DIR}/...
 # )
+# set(MCHECKSUM_EXPORTED_LIBS ... ${MCHECKSUM_EXPORTED_LIBS})
+
+#------------------------------------------------------------------------------
+# External dependencies
+#------------------------------------------------------------------------------
+# ZLIB
 option(MCHECKSUM_USE_ZLIB "Use ZLIB checksum." OFF)
 if(MCHECKSUM_USE_ZLIB)
   find_package(ZLIB REQUIRED)
@@ -23,18 +38,18 @@ if(MCHECKSUM_USE_ZLIB)
   endif()
 endif()
 
+option(MCHECKSUM_USE_SSE4_2 "Use SSE 4.2 instruction set." OFF)
+if(MCHECKSUM_USE_SSE4_2)
+  message(STATUS "Using SSE 4.2 instruction set.")
+  set(MCHECKSUM_HAS_SSE4_2 1)
+  if(WIN32)
+    add_definitions(/arch:SSE4.2)
+  else()
+    add_definitions(-msse4.2)
+  endif()
+endif(MCHECKSUM_USE_SSE4_2)
+
 include_directories(${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
-  
-#------------------------------------------------------------------------------
-# Internal dependencies
-#------------------------------------------------------------------------------
-# nothing for now
-# add_subdirectory()
-# include_directories(
-#  ${CMAKE_CURRENT_SOURCE_DIR}/...
-#  ${CMAKE_CURRENT_BINARY_DIR}/...
-# )
-# set(MCHECKSUM_EXPORTED_LIBS ... ${MCHECKSUM_EXPORTED_LIBS})
 
 #------------------------------------------------------------------------------
 # Configure module header files
@@ -62,14 +77,10 @@ configure_file(
 #------------------------------------------------------------------------------
 # Set sources
 #------------------------------------------------------------------------------
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  )
-
 set(MCHECKSUM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc16.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc32c.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc64.c
 )
 
@@ -78,6 +89,11 @@ if(MCHECKSUM_HAS_ZLIB)
     ${MCHECKSUM_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.c
   )
+endif()
+
+set(MCHECKSUM_HASH_TYPES crc16 crc32c crc64)
+if(MCHECKSUM_HAS_ZLIB)
+  set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} crc32 adler32)
 endif()
 
 #----------------------------------------------------------------------------
@@ -95,6 +111,27 @@ if(MCHECKSUM_ENABLE_COVERAGE)
 endif()
 
 set(MCHECKSUM_EXPORTED_LIBS mchecksum ${MCHECKSUM_EXPORTED_LIBS})
+
+#-----------------------------------------------------------------------------
+# Specify project header files to be installed
+#-----------------------------------------------------------------------------
+set(MCHECKSUM_HEADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
+  ${CMAKE_CURRENT_BINARY_DIR}/mchecksum_config.h
+)
+
+#-----------------------------------------------------------------------------
+# Add file(s) to CMake Install
+#-----------------------------------------------------------------------------
+install(
+  FILES
+    ${MCHECKSUM_HEADERS}
+  DESTINATION
+    ${MCHECKSUM_INSTALL_INCLUDE_DIR}
+  COMPONENT
+    headers
+)
 
 #---------------------------------------------------------------------------
 # Add Target(s) to CMake Install
@@ -124,27 +161,6 @@ install(
 endif()
 
 #-----------------------------------------------------------------------------
-# Specify project header files to be installed
-#-----------------------------------------------------------------------------
-set(MCHECKSUM_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
-  ${CMAKE_CURRENT_BINARY_DIR}/mchecksum_config.h
-)
-
-#-----------------------------------------------------------------------------
-# Add file(s) to CMake Install
-#-----------------------------------------------------------------------------
-install(
-  FILES
-    ${MCHECKSUM_HEADERS}
-  DESTINATION
-    ${MCHECKSUM_INSTALL_INCLUDE_DIR}
-  COMPONENT
-    headers
-)
-
-#-----------------------------------------------------------------------------
 # Add Target(s) to CMake Install for import into other projects
 #-----------------------------------------------------------------------------
 install(
@@ -171,18 +187,20 @@ endif()
 #------------------------------------------------------------------------------
 # Set variables for parent scope
 #------------------------------------------------------------------------------
+set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} PARENT_SCOPE)
+
 # Used by config.cmake.build.in and Testing
 set(MCHECKSUM_INCLUDES_BUILD_TIME
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-#  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
+  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
   PARENT_SCOPE
 )
 
 # Used by config.cmake.install.in
 set(MCHECKSUM_INCLUDES_INSTALL_TIME
   ${MCHECKSUM_INSTALL_INCLUDE_DIR}
-#  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
+  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
   PARENT_SCOPE
 )
 
@@ -202,4 +220,31 @@ if(NOT WIN32)
   endforeach()
   set(MCHECKSUM_LIBRARIES ${MCHECKSUM_LIBRARIES} PARENT_SCOPE)
 
+  # Need to generate -llib if not already passed
+  foreach(lib_dep ${MCHECKSUM_EXT_LIB_DEPENDENCIES})
+    # get library name
+    get_filename_component(lib_name ${lib_dep} NAME_WE)
+    if(lib_name MATCHES "^-l")
+      # lib_name found is -lxxx
+      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} ${lib_name})
+    else()
+      # lib_name is /path/to/lib so get library path and name
+      get_filename_component(lib_path ${lib_dep} PATH)
+      string(REGEX REPLACE "^lib" "" lib_name ${lib_name})
+      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} -L${lib_path} -l${lib_name})
+    endif()
+  endforeach()
+  if(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
+    list(REMOVE_DUPLICATES MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
+  endif()
+
+  foreach(lib_dep ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST})
+    set(MCHECKSUM_LIB_DEPENDENCIES "${MCHECKSUM_LIB_DEPENDENCIES} ${lib_dep}")
+  endforeach()
+  set(MCHECKSUM_LIB_DEPENDENCIES ${MCHECKSUM_LIB_DEPENDENCIES} PARENT_SCOPE)
+
+  foreach(inc_dep ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
+    set(MCHECKSUM_INCLUDE_DEPENDENCIES "${MCHECKSUM_INCLUDE_DEPENDENCIES} -I${inc_dep}")
+  endforeach()
+  set(MCHECKSUM_INCLUDE_DEPENDENCIES ${MCHECKSUM_INCLUDE_DEPENDENCIES} PARENT_SCOPE)
 endif()

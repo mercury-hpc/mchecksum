@@ -36,7 +36,11 @@ main(int argc, char *argv[])
         return ret;
     }
 
-    if (strcmp(argv[1], "crc16") && strcmp(argv[1], "crc64")) {
+    if (strcmp(argv[1], "crc16")
+        && strcmp(argv[1], "crc64")
+        && strcmp(argv[1], "crc32")
+        && strcmp(argv[1], "adler32")
+        && strcmp(argv[1], "crc32c")) {
         fprintf(stderr, "%s is not a valid parameter\n", argv[1]);
         ret = EXIT_FAILURE;
         return ret;

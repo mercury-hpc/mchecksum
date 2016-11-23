@@ -10,6 +10,7 @@
 
 #include "mchecksum_crc64.h"
 #include "mchecksum_crc16.h"
+#include "mchecksum_crc32c.h"
 #ifdef MCHECKSUM_HAS_ZLIB
 #include "mchecksum_zlib.h"
 #endif
@@ -42,6 +43,12 @@ mchecksum_init(const char *hash_method, mchecksum_object_t *checksum)
     } else if (strcmp(hash_method, "crc16") == 0) {
         if (mchecksum_crc16_init(checksum_class) != MCHECKSUM_SUCCESS) {
             MCHECKSUM_ERROR_DEFAULT("Could not initialize crc16 checksum");
+            ret = MCHECKSUM_FAIL;
+            goto done;
+        }
+    } else if (strcmp(hash_method, "crc32c") == 0) {
+        if (mchecksum_crc32c_init(checksum_class) != MCHECKSUM_SUCCESS) {
+            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc32c checksum");
             ret = MCHECKSUM_FAIL;
             goto done;
         }
