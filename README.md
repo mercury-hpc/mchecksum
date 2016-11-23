@@ -94,4 +94,4 @@ Extra verbose information can be displayed by inserting "-VV". E.g.:
 
     ctest -VV .
 
-[documentation]: http://mercury-hpc.github.io/documentation/mchecksum
+[documentation]: http://mercury-hpc.github.io/documentation/2016/11/23/mchecksum.html
