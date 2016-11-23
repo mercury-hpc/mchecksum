@@ -225,19 +225,19 @@ static int
 mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
     const void *data, size_t size)
 {
-    mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
 #ifdef MCHECKSUM_HAS_SSE4_2
+    mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
 #ifdef __x86_64__
     const unsigned long long *cur = (const unsigned long long *) data;
 #else
     const unsigned int *cur = (const unsigned int *) data;
 #endif
-    unsigned int quotient = size / MAX_SIZE;
+    unsigned int quotient = (unsigned int) (size / MAX_SIZE);
     unsigned int remainder = size % MAX_SIZE;
 
     while (quotient--)
 #ifdef __x86_64__
-        *state = _mm_crc32_u64(*state, *cur++);
+        *state = (mchecksum_uint32_t) _mm_crc32_u64(*state, *cur++);
 #else
         *state = _mm_crc32_u32(*state, *cur++);
 #endif
