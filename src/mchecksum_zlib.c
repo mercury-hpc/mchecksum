@@ -93,7 +93,8 @@ mchecksum_crc32_destroy(struct mchecksum_class *checksum_class)
 static int
 mchecksum_crc32_reset(struct mchecksum_class *checksum_class)
 {
-    *(mchecksum_uint32_t*) checksum_class->data = crc32(0L, Z_NULL, 0);
+    *(mchecksum_uint32_t*) checksum_class->data =
+        (mchecksum_uint32_t) crc32(0L, Z_NULL, 0);
 
     return MCHECKSUM_SUCCESS;
 }
@@ -130,7 +131,9 @@ mchecksum_crc32_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size)
 {
     mchecksum_uint32_t *state = (mchecksum_uint32_t*) checksum_class->data;
-    *state = crc32(*state, data, size);
+
+    *state = (mchecksum_uint32_t) crc32(*state, data, (unsigned int) size);
+
     return MCHECKSUM_SUCCESS;
 }
 
@@ -175,7 +178,8 @@ mchecksum_adler32_destroy(struct mchecksum_class *checksum_class)
 static int
 mchecksum_adler32_reset(struct mchecksum_class *checksum_class)
 {
-    *(mchecksum_uint32_t*) checksum_class->data = adler32(0L, Z_NULL, 0);
+    *(mchecksum_uint32_t*) checksum_class->data =
+        (mchecksum_uint32_t) adler32(0L, Z_NULL, 0);
 
     return MCHECKSUM_SUCCESS;
 }
@@ -212,6 +216,8 @@ mchecksum_adler32_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size)
 {
     mchecksum_uint32_t *state = (mchecksum_uint32_t*) checksum_class->data;
-    *state = adler32(*state, data, size);
+
+    *state = (mchecksum_uint32_t) adler32(*state, data, (unsigned int) size);
+
     return MCHECKSUM_SUCCESS;
 }
