@@ -49,6 +49,24 @@ if(MCHECKSUM_USE_SSE4_2)
   endif()
 endif(MCHECKSUM_USE_SSE4_2)
 
+# ISA-L
+option(MCHECKSUM_USE_ISAL "Use ISA-L checksum." OFF)
+if(MCHECKSUM_USE_ISAL)
+  find_package(ISAL REQUIRED)
+  if(ISAL_FOUND)
+    message(STATUS "ISAL include directory: ${ISAL_INCLUDE_DIRS}")
+    set(MCHECKSUM_HAS_ISAL 1)
+    set(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES ${ISAL_INCLUDE_DIRS}
+      ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
+    )
+    set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ISAL_LIBRARIES}
+      ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
+    )
+  else()
+    message(FATAL_ERROR "Could not find ISAL, please check ISAL_INCLUDE_DIRS.")
+  endif()
+endif()
+
 include_directories(${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
 
 #------------------------------------------------------------------------------

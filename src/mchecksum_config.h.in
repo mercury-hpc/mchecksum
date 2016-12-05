@@ -31,6 +31,8 @@
 
 #cmakedefine MCHECKSUM_HAS_SSE4_2
 
+#cmakedefine MCHECKSUM_HAS_ISAL
+
 #cmakedefine MCHECKSUM_HAVE_VERBOSE_ERROR
 
 #cmakedefine MCHECKSUM_BUILD_SHARED_LIBS

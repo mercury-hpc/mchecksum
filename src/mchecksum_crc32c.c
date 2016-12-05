@@ -12,7 +12,9 @@
 #include "mchecksum_error.h"
 
 #include <stdlib.h>
-#ifdef MCHECKSUM_HAS_SSE4_2
+#if defined(MCHECKSUM_HAS_ISAL)
+  #include <isa-l.h>
+#elif defined(MCHECKSUM_HAS_SSE4_2)
   #include <nmmintrin.h>
   #ifdef __x86_64__
     #define MAX_SIZE 8
@@ -38,7 +40,7 @@ static struct mchecksum_class mchecksum_crc32_g = {
     mchecksum_crc32c_update
 };
 
-#ifndef MCHECKSUM_HAS_SSE4_2
+#if !defined(MCHECKSUM_HAS_SSE4_2) && !defined(MCHECKSUM_HAS_ISAL)
 static const mchecksum_uint32_t table_[256] = {
     0x00000000L, 0xF26B8303L, 0xE13B70F7L, 0x1350F3F4L, 0xC79A971FL,
     0x35F1141CL, 0x26A1E7E8L, 0xD4CA64EBL, 0x8AD958CFL, 0x78B2DBCCL,
@@ -205,6 +207,7 @@ done:
 }
 
 /*---------------------------------------------------------------------------*/
+#ifndef MCHECKSUM_HAS_ISAL
 static MCHECKSUM_INLINE void
 mchecksum_crc32c_update_byte(struct mchecksum_class *checksum_class,
     const void *data, size_t size)
@@ -219,19 +222,23 @@ mchecksum_crc32c_update_byte(struct mchecksum_class *checksum_class,
         *state = (*state >> 8) ^ table_[(*state ^ *cur++) & 0xFFL];
 #endif
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 static int
 mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
     const void *data, size_t size)
 {
-#ifdef MCHECKSUM_HAS_SSE4_2
+#if defined(MCHECKSUM_HAS_SSE4_2) || defined(MCHECKSUM_HAS_ISAL)
     mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
+#if defined(MCHECKSUM_HAS_ISAL)
+    *state = crc32_iscsi((unsigned char *) data, (int) size, *state);
+#elif defined(MCHECKSUM_HAS_SSE4_2)
 #ifdef __x86_64__
     const unsigned long long *cur = (const unsigned long long *) data;
 #else
     const unsigned int *cur = (const unsigned int *) data;
-#endif
+#endif /* __x86_64__ */
     unsigned int quotient = (unsigned int) (size / MAX_SIZE);
     unsigned int remainder = size % MAX_SIZE;
 
@@ -240,10 +247,11 @@ mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
         *state = (mchecksum_uint32_t) _mm_crc32_u64(*state, *cur++);
 #else
         *state = _mm_crc32_u32(*state, *cur++);
-#endif
+#endif /* __x86_64__ */
 
     if (remainder)
         mchecksum_crc32c_update_byte(checksum_class, cur, remainder);
+#endif /* defined(MCHECKSUM_HAS_SSE4_2) || defined(MCHECKSUM_HAS_ISAL) */
 #else
     mchecksum_crc32c_update_byte(checksum_class, data, size);
 #endif
