@@ -27,9 +27,7 @@ if(MCHECKSUM_USE_ZLIB)
   if(ZLIB_FOUND)
     message(STATUS "ZLIB include directory: ${ZLIB_INCLUDE_DIRS}")
     set(MCHECKSUM_HAS_ZLIB 1)
-    set(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES ${ZLIB_INCLUDE_DIRS}
-      ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
-    )
+    include_directories(${ZLIB_INCLUDE_DIRS})
     set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ZLIB_LIBRARIES}
       ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
     )
@@ -56,9 +54,7 @@ if(MCHECKSUM_USE_ISAL)
   if(ISAL_FOUND)
     message(STATUS "ISAL include directory: ${ISAL_INCLUDE_DIRS}")
     set(MCHECKSUM_HAS_ISAL 1)
-    set(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES ${ISAL_INCLUDE_DIRS}
-      ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
-    )
+    include_directories(${ISAL_INCLUDE_DIRS})
     set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ISAL_LIBRARIES}
       ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
     )
@@ -66,8 +62,6 @@ if(MCHECKSUM_USE_ISAL)
     message(FATAL_ERROR "Could not find ISAL, please check ISAL_INCLUDE_DIRS.")
   endif()
 endif()
-
-include_directories(${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
 
 #------------------------------------------------------------------------------
 # Configure module header files
