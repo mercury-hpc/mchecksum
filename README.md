@@ -22,7 +22,7 @@ Software requirements
 CRC32 and Adler32 checksums require ZLIB to be installed on your system.
 CRC32C can be used with or without HW acceleration -- SSE4.2 acceleration
 requires the SSE4.2 instruction set to be supported by your CPU, improved
-performance can be achieved using the Intel(R) ISA-L[*][isal] library but
+performance can be achieved using the Intel(R) [ISA-L][isal] library but
 requires the PCLMULQDQ instruction to be supported by your CPU as well as
 this library to be installed on your system.
 
