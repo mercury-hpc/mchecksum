@@ -28,7 +28,7 @@ project(MCHECKSUM C)
 # Version information 
 #------------------------------------------------------------------------------
 set(MCHECKSUM_VERSION_MAJOR "0")
-set(MCHECKSUM_VERSION_MINOR "2")
+set(MCHECKSUM_VERSION_MINOR "3")
 set(MCHECKSUM_VERSION_PATCH "0")
 set(MCHECKSUM_PACKAGE "mchecksum")
 set(MCHECKSUM_PACKAGE_NAME "MCHECKSUM")
