@@ -20,8 +20,11 @@ Software requirements
 =====================
 
 CRC32 and Adler32 checksums require ZLIB to be installed on your system.
-CRC32C can be used with or without SSE4.2 acceleration -- SSE4.2
-requires the SSE4.2 instruction set to be supported by your CPU.
+CRC32C can be used with or without HW acceleration -- SSE4.2 acceleration
+requires the SSE4.2 instruction set to be supported by your CPU, improved
+performance can be achieved using the Intel(R) ISA-L[*][isal] library but
+requires the PCLMULQDQ instruction to be supported by your CPU as well as
+this library to be installed on your system.
 
 Building
 ========
@@ -52,8 +55,9 @@ Type 'c' multiple times and choose suitable options. Recommended options are:
                                      against requires static libraries)
     BUILD_TESTING                    ON
     CMAKE_INSTALL_PREFIX             /path/to/install/directory
+    MCHECKSUM_USE_ISAL               OFF (Optional)
     MCHECKSUM_USE_SSE4_2             ON
-    MCHECKSUM_USE_ZLIB               OFF
+    MCHECKSUM_USE_ZLIB               OFF (Optional)
 
 Setting include directory and library paths may require you to toggle to
 the advanced mode by typing 't'. Once you are done and do not see any
@@ -95,3 +99,4 @@ Extra verbose information can be displayed by inserting "-VV". E.g.:
     ctest -VV .
 
 [documentation]: http://mercury-hpc.github.io/documentation/2016/11/23/mchecksum.html
+[isal]: https://github.com/01org/isa-l
