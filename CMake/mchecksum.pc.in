@@ -7,7 +7,7 @@ includedir=@MCHECKSUM_INSTALL_INCLUDE_DIR@
 Name: mchecksum
 Description: Generic Checksum Library
 Version: @MCHECKSUM_PACKAGE_VERSION@
-URL: http://trac.mcs.anl.gov/projects/mchecksum
+URL: https://github.com/mercury-hpc/mchecksum
 Requires:
 Libs: -L${libdir} @MCHECKSUM_LIBRARIES@
 Libs.private: @MCHECKSUM_LIB_DEPENDENCIES@

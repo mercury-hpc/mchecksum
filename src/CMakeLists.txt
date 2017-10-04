@@ -1,21 +1,10 @@
 #------------------------------------------------------------------------------
 # Include source and build directories
 #------------------------------------------------------------------------------
-include_directories(
+set(MCHECKSUM_BUILD_INCLUDE_DEPENDENCIES
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-#------------------------------------------------------------------------------
-# Internal dependencies
-#------------------------------------------------------------------------------
-# nothing for now
-# add_subdirectory()
-# include_directories(
-#  ${CMAKE_CURRENT_SOURCE_DIR}/...
-#  ${CMAKE_CURRENT_BINARY_DIR}/...
-# )
-# set(MCHECKSUM_EXPORTED_LIBS ... ${MCHECKSUM_EXPORTED_LIBS})
 
 #------------------------------------------------------------------------------
 # External dependencies
@@ -27,7 +16,8 @@ if(MCHECKSUM_USE_ZLIB)
   if(ZLIB_FOUND)
     message(STATUS "ZLIB include directory: ${ZLIB_INCLUDE_DIRS}")
     set(MCHECKSUM_HAS_ZLIB 1)
-    include_directories(${ZLIB_INCLUDE_DIRS})
+    set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES ${ZLIB_INCLUDE_DIRS}
+      ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES})
     set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ZLIB_LIBRARIES}
       ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
     )
@@ -54,7 +44,8 @@ if(MCHECKSUM_USE_ISAL)
   if(ISAL_FOUND)
     message(STATUS "ISAL include directory: ${ISAL_INCLUDE_DIRS}")
     set(MCHECKSUM_HAS_ISAL 1)
-    include_directories(${ISAL_INCLUDE_DIRS})
+    set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES ${ISAL_INCLUDE_DIRS}
+      ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES})
     set(MCHECKSUM_EXT_LIB_DEPENDENCIES ${ISAL_LIBRARIES}
       ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
     )
@@ -113,8 +104,12 @@ endif()
 #----------------------------------------------------------------------------
 # mchecksum
 add_library(mchecksum ${MCHECKSUM_SRCS})
+target_include_directories(mchecksum
+  PRIVATE ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
+  PUBLIC "$<BUILD_INTERFACE:${MCHECKSUM_BUILD_INCLUDE_DEPENDENCIES}>"
+          $<INSTALL_INTERFACE:${MCHECKSUM_INSTALL_INCLUDE_DIR}>
+)
 target_link_libraries(mchecksum
-#  ${MCHECKSUM_EXPORTED_LIBS}
   ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
 )
 mchecksum_set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})

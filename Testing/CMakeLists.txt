@@ -21,7 +21,6 @@ endfunction()
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${MCHECKSUM_INCLUDES_BUILD_TIME}
 )
 
 #------------------------------------------------------------------------------

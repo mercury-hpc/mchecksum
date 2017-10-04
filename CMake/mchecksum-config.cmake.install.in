@@ -4,11 +4,6 @@
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 #-----------------------------------------------------------------------------
-# Directories
-#-----------------------------------------------------------------------------
-set(MCHECKSUM_INCLUDE_DIR "@MCHECKSUM_INCLUDES_INSTALL_TIME@")
-
-#-----------------------------------------------------------------------------
 # Version Strings
 #-----------------------------------------------------------------------------
 set(MCHECKSUM_VERSION_STRING  @MCHECKSUM_PACKAGE_VERSION@)
