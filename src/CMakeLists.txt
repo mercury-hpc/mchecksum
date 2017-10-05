@@ -202,21 +202,6 @@ endif()
 #------------------------------------------------------------------------------
 set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} PARENT_SCOPE)
 
-# Used by config.cmake.build.in and Testing
-set(MCHECKSUM_INCLUDES_BUILD_TIME
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
-  PARENT_SCOPE
-)
-
-# Used by config.cmake.install.in
-set(MCHECKSUM_INCLUDES_INSTALL_TIME
-  ${MCHECKSUM_INSTALL_INCLUDE_DIR}
-  ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
-  PARENT_SCOPE
-)
-
 # Pkg-config configuration
 if(NOT WIN32)
   if(CMAKE_BUILD_TYPE)
