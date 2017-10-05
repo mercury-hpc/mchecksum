@@ -29,9 +29,16 @@ if(MCHECKSUM_USE_ZLIB)
   endif()
 endif()
 
-option(MCHECKSUM_USE_SSE4_2 "Use SSE 4.2 instruction set." OFF)
+try_run(MCHECKSUM_CAN_RUN_SSE4_2 MCHECKSUM_CAN_COMPILE_SSE4_2
+  ${CMAKE_BINARY_DIR} ${MCHECKSUM_CMAKE_DIR}/CheckSSE42.c
+  OUTPUT_VARIABLE CHECK_SSE4_2_OUTPUT
+)
+option(MCHECKSUM_USE_SSE4_2 "Use SSE 4.2 instruction set." ${MCHECKSUM_CAN_RUN_SSE4_2})
 if(MCHECKSUM_USE_SSE4_2)
   message(STATUS "Using SSE 4.2 instruction set.")
+  if(NOT ${MCHECKSUM_CAN_RUN_SSE4_2})
+    message(WARNING "This platform is not capable of running SSE 4.2 instructions.")
+  endif()
   set(MCHECKSUM_HAS_SSE4_2 1)
   if(WIN32)
     add_definitions(/arch:SSE4.2)
