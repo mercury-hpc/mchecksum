@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------
-# Config file for compiling against the build directory
+# Config file for compiling against the install directory
 #-----------------------------------------------------------------------------
-get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(MCHECKSUM_SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 #-----------------------------------------------------------------------------
 # Version Strings
@@ -16,5 +16,5 @@ set(MCHECKSUM_VERSION_PATCH   @MCHECKSUM_VERSION_PATCH@)
 # project which has already built MCHECKSUM as a subproject
 #-----------------------------------------------------------------------------
 if(NOT TARGET "mchecksum" AND NOT MCHECKSUM_INSTALL_SKIP_TARGETS)
-  include(${SELF_DIR}/mchecksum-targets.cmake)
+  include(${MCHECKSUM_SELF_DIR}/mchecksum-targets.cmake)
 endif()
