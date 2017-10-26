@@ -120,7 +120,9 @@ add_library(mchecksum ${MCHECKSUM_SRCS})
 target_include_directories(mchecksum
   PUBLIC  "$<BUILD_INTERFACE:${MCHECKSUM_BUILD_INCLUDE_DEPENDENCIES}>"
            $<INSTALL_INTERFACE:${MCHECKSUM_INSTALL_INCLUDE_INTERFACE}>
-  PRIVATE  ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
+)
+target_include_directories(mchecksum
+  SYSTEM PRIVATE ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
 )
 target_link_libraries(mchecksum
   ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
