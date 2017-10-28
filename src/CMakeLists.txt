@@ -115,6 +115,14 @@ endif()
 #----------------------------------------------------------------------------
 # Libraries
 #----------------------------------------------------------------------------
+
+# Clean up system include path first
+foreach(item ${MCHECKSUM_SYSTEM_INCLUDE_PATH})
+  if(MCHECKSUM_INT_INCLUDE_DEPENDENCIES)
+    list(REMOVE_ITEM MCHECKSUM_INT_INCLUDE_DEPENDENCIES ${item})
+  endif()
+endforeach()
+
 # mchecksum
 add_library(mchecksum ${MCHECKSUM_SRCS})
 target_include_directories(mchecksum
