@@ -14,7 +14,17 @@
 #include <zlib.h>
 #include <stdlib.h>
 
-/*---------------------------------------------------------------------------*/
+/****************/
+/* Local Macros */
+/****************/
+
+/************************************/
+/* Local Type and Struct Definition */
+/************************************/
+
+/********************/
+/* Local Prototypes */
+/********************/
 
 static int mchecksum_crc32_destroy(struct mchecksum_class *checksum_class);
 static int mchecksum_crc32_reset(struct mchecksum_class *checksum_class);
@@ -24,16 +34,6 @@ static int mchecksum_crc32_get(struct mchecksum_class *checksum_class,
 static int mchecksum_crc32_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size);
 
-static struct mchecksum_class mchecksum_crc32_g = {
-        NULL,
-        mchecksum_crc32_destroy,
-        mchecksum_crc32_reset,
-        mchecksum_crc32_get_size,
-        mchecksum_crc32_get,
-        mchecksum_crc32_update
-};
-
-/*---------------------------------------------------------------------------*/
 static int mchecksum_adler32_destroy(struct mchecksum_class *checksum_class);
 static int mchecksum_adler32_reset(struct mchecksum_class *checksum_class);
 static size_t mchecksum_adler32_get_size(struct mchecksum_class *checksum_class);
@@ -42,15 +42,27 @@ static int mchecksum_adler32_get(struct mchecksum_class *checksum_class,
 static int mchecksum_adler32_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size);
 
-static struct mchecksum_class mchecksum_adler32_g = {
-        NULL,
-        mchecksum_adler32_destroy,
-        mchecksum_adler32_reset,
-        mchecksum_adler32_get_size,
-        mchecksum_adler32_get,
-        mchecksum_adler32_update
+/*******************/
+/* Local Variables */
+/*******************/
+
+static struct mchecksum_class mchecksum_crc32_g = {
+    NULL,
+    mchecksum_crc32_destroy,
+    mchecksum_crc32_reset,
+    mchecksum_crc32_get_size,
+    mchecksum_crc32_get,
+    mchecksum_crc32_update
 };
 
+static struct mchecksum_class mchecksum_adler32_g = {
+    NULL,
+    mchecksum_adler32_destroy,
+    mchecksum_adler32_reset,
+    mchecksum_adler32_get_size,
+    mchecksum_adler32_get,
+    mchecksum_adler32_update
+};
 
 /*---------------------------------------------------------------------------*/
 int
@@ -137,7 +149,6 @@ mchecksum_crc32_update(struct mchecksum_class *checksum_class,
     return MCHECKSUM_SUCCESS;
 }
 
-/*----------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 int
 mchecksum_adler32_init(struct mchecksum_class *checksum_class)

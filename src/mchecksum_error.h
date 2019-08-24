@@ -13,33 +13,35 @@
 
 #include "mchecksum_config.h"
 
+/*****************/
+/* Public Macros */
+/*****************/
+
 #define MCHECKSUM_SUCCESS  1
 #define MCHECKSUM_FAIL    -1
-#define MCHECKSUM_TRUE     1
-#define MCHECKSUM_FALSE    0
 
 /* For compatibility */
 #if defined(__STDC_VERSION__) &&  (__STDC_VERSION__ < 199901L)
-  #if defined(__GNUC__) && (__GNUC__ >= 2)
-    #define __func__ __FUNCTION__
-  #else
-    #define __func__ "<unknown>"
-  #endif
+# if defined(__GNUC__) && (__GNUC__ >= 2)
+#  define __func__ __FUNCTION__
+# else
+#  define __func__ "<unknown>"
+# endif
 #elif defined(_WIN32)
-  #define __func__ __FUNCTION__
+# define __func__ __FUNCTION__
 #endif
 
 /* Default error macro */
-#ifdef MCHECKSUM_HAVE_VERBOSE_ERROR
-  #include <stdio.h>
-  #define MCHECKSUM_ERROR_DEFAULT(x) do {         \
-        fprintf(stderr, "Error "                  \
-                "in %s:%d (%s): "                 \
-                "%s.\n",                          \
-                __FILE__, __LINE__, __func__, x); \
+#ifdef MCHECKSUM_HAS_VERBOSE_ERROR
+# include <stdio.h>
+# define MCHECKSUM_ERROR_DEFAULT(x) do {        \
+    fprintf(stderr, "Error "                    \
+        "in %s:%d (%s): "                       \
+        "%s.\n",                                \
+        __FILE__, __LINE__, __func__, x);       \
   } while(0)
 #else
-  #define MCHECKSUM_ERROR_DEFAULT(x) (void)0
+# define MCHECKSUM_ERROR_DEFAULT(x) (void)0
 #endif
 
 #endif /* MCHECKSUM_ERROR_H */

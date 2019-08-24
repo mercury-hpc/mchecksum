@@ -13,15 +13,27 @@
 
 #include <stdlib.h>
 #if defined(MCHECKSUM_HAS_ISAL)
-  #include <isa-l.h>
+# include <isa-l.h>
 #elif defined(MCHECKSUM_HAS_SSE4_2)
-  #include <nmmintrin.h>
-  #ifdef __x86_64__
-    #define MAX_SIZE 8
-  #else
-    #define MAX_SIZE 4
-  #endif
+# include <nmmintrin.h>
+# ifdef __x86_64__
+#  define MAX_SIZE 8
+# else
+#  define MAX_SIZE 4
+# endif
 #endif
+
+/****************/
+/* Local Macros */
+/****************/
+
+/************************************/
+/* Local Type and Struct Definition */
+/************************************/
+
+/********************/
+/* Local Prototypes */
+/********************/
 
 static int mchecksum_crc32c_destroy(struct mchecksum_class *checksum_class);
 static int mchecksum_crc32c_reset(struct mchecksum_class *checksum_class);
@@ -30,6 +42,10 @@ static int mchecksum_crc32c_get(struct mchecksum_class *checksum_class,
     void *buf, size_t size, int finalize);
 static int mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
     const void *data, size_t size);
+
+/*******************/
+/* Local Variables */
+/*******************/
 
 static struct mchecksum_class mchecksum_crc32_g = {
     NULL,

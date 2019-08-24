@@ -13,12 +13,24 @@
 
 #include "mchecksum_config.h"
 
+/*************************************/
+/* Public Type and Struct Definition */
+/*************************************/
+
 typedef void *mchecksum_object_t;
+
+/*****************/
+/* Public Macros */
+/*****************/
 
 #define MCHECKSUM_OBJECT_NULL ((mchecksum_object_t)0)
 
 #define MCHECKSUM_NOFINALIZE  0
 #define MCHECKSUM_FINALIZE    1
+
+/*********************/
+/* Public Prototypes */
+/*********************/
 
 #ifdef __cplusplus
 extern "C" {

@@ -11,7 +11,7 @@
 #ifndef MCHECKSUM_CRC16_H
 #define MCHECKSUM_CRC16_H
 
-#include "mchecksum_private.h"
+#include "mchecksum_plugin.h"
 
 #ifdef __cplusplus
 extern "C" {

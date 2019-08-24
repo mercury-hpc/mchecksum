@@ -13,14 +13,9 @@
 
 #include "mchecksum.h"
 
-/* Remove warnings when plugin does not use callback arguments */
-#if defined(__cplusplus)
-    #define MCHECKSUM_UNUSED
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-    #define MCHECKSUM_UNUSED __attribute__((unused))
-#else
-    #define MCHECKSUM_UNUSED
-#endif
+/*************************************/
+/* Public Type and Struct Definition */
+/*************************************/
 
 /* Checksum class definition */
 struct mchecksum_class {
@@ -35,5 +30,18 @@ struct mchecksum_class {
     int (*update)(struct mchecksum_class *checksum_class,
             const void *data, size_t size);
 };
+
+/*****************/
+/* Public Macros */
+/*****************/
+
+/* Remove warnings when plugin does not use callback arguments */
+#if defined(__cplusplus)
+# define MCHECKSUM_UNUSED
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+# define MCHECKSUM_UNUSED __attribute__((unused))
+#else
+# define MCHECKSUM_UNUSED
+#endif
 
 #endif /* MCHECKSUM_PRIVATE_H */

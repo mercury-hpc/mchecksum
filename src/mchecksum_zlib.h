@@ -11,7 +11,7 @@
 #ifndef MCHECKSUM_ZLIB_H
 #define MCHECKSUM_ZLIB_H
 
-#include "mchecksum_private.h"
+#include "mchecksum_plugin.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,8 +13,20 @@
 
 #include <stdlib.h>
 #if defined(MCHECKSUM_HAS_ISAL)
-  #include <isa-l.h>
+# include <isa-l.h>
 #endif
+
+/****************/
+/* Local Macros */
+/****************/
+
+/************************************/
+/* Local Type and Struct Definition */
+/************************************/
+
+/********************/
+/* Local Prototypes */
+/********************/
 
 static int mchecksum_crc64_destroy(struct mchecksum_class *checksum_class);
 static int mchecksum_crc64_reset(struct mchecksum_class *checksum_class);
@@ -23,6 +35,10 @@ static int mchecksum_crc64_get(struct mchecksum_class *checksum_class,
         void *buf, size_t size, int finalize);
 static int mchecksum_crc64_update(struct mchecksum_class *checksum_class,
         const void *data, size_t size);
+
+/*******************/
+/* Local Variables */
+/*******************/
 
 static struct mchecksum_class mchecksum_crc64_g = {
         NULL,
