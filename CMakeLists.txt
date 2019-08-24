@@ -9,6 +9,9 @@ foreach(p
     CMP0025 # CMake 3.0
     CMP0053 # CMake 3.1
     CMP0054 # CMake 3.1
+    CMP0074 # CMake 3.12
+    CMP0075 # CMake 3.12
+    CMP0083 # CMake 3.14
   )
   if(POLICY ${p})
     cmake_policy(SET ${p} NEW)
@@ -23,20 +26,6 @@ if(NOT DEFINED CMAKE_MACOSX_RPATH)
 endif()
 
 project(MCHECKSUM C)
-
-#------------------------------------------------------------------------------
-# Version information 
-#------------------------------------------------------------------------------
-set(MCHECKSUM_VERSION_MAJOR "0")
-set(MCHECKSUM_VERSION_MINOR "3")
-set(MCHECKSUM_VERSION_PATCH "1")
-set(MCHECKSUM_PACKAGE "mchecksum")
-set(MCHECKSUM_PACKAGE_NAME "MCHECKSUM")
-set(MCHECKSUM_PACKAGE_VERSION "${MCHECKSUM_VERSION_MAJOR}.${MCHECKSUM_VERSION_MINOR}.${MCHECKSUM_VERSION_PATCH}")
-set(MCHECKSUM_PACKAGE_VERSION_MAJOR "${MCHECKSUM_VERSION_MAJOR}.${MCHECKSUM_VERSION_MINOR}")
-set(MCHECKSUM_PACKAGE_VERSION_MINOR "${MCHECKSUM_VERSION_PATCH}")
-set(MCHECKSUM_PACKAGE_STRING "${MCHECKSUM_PACKAGE_NAME} ${MCHECKSUM_PACKAGE_VERSION}")
-set(MCHECKSUM_PACKAGE_TARNAME "${MCHECKSUM_PACKAGE}")
 
 #------------------------------------------------------------------------------
 # Setup install and output Directories
@@ -66,6 +55,29 @@ endif()
 if(NOT CMAKE_INSTALL_RPATH_USE_LINK_PATH)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
+
+#------------------------------------------------------------------------------
+# Set module path
+#------------------------------------------------------------------------------
+set(MCHECKSUM_CMAKE_MODULE_PATH "${MCHECKSUM_SOURCE_DIR}/CMake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${MCHECKSUM_CMAKE_MODULE_PATH})
+
+#------------------------------------------------------------------------------
+# Version information
+#------------------------------------------------------------------------------
+include(${MCHECKSUM_CMAKE_MODULE_PATH}/Git/Git.cmake)
+include(MChecksumDetermineVersion)
+# Hard-coded version variables are read-in from a separate file. This makes it
+# easier to have a script to update version numbers automatically.
+file(STRINGS version.txt version_txt)
+extract_version_components("${version_txt}" "${CMAKE_PROJECT_NAME}")
+determine_version(${MCHECKSUM_SOURCE_DIR} ${GIT_EXECUTABLE} "${CMAKE_PROJECT_NAME}")
+set(MCHECKSUM_PACKAGE "mchecksum")
+set(MCHECKSUM_PACKAGE_NAME "MChecksum")
+set(MCHECKSUM_PACKAGE_DESCRIPTION "Mercury Checksum Library")
+set(MCHECKSUM_PACKAGE_URL "https://github.com/mercury-hpc/mchecksum")
+set(MCHECKSUM_PACKAGE_VENDOR "Argonne National Laboratory / The HDF Group")
+message(STATUS "Configuring ${MCHECKSUM_PACKAGE} v${MCHECKSUM_VERSION_FULL}")
 
 #------------------------------------------------------------------------------
 # Setup CMake Environment
@@ -107,8 +119,6 @@ if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
       ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries."
   )
 endif()
-set(MCHECKSUM_CMAKE_DIR "${MCHECKSUM_SOURCE_DIR}/CMake")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${MCHECKSUM_CMAKE_DIR})
 
 #------------------------------------------------------------------------------
 # Disallow in-source build
@@ -130,23 +140,40 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+if(NOT CMAKE_C_FLAGS AND CMAKE_COMPILER_IS_GNUCC)
+  message(STATUS "GCC detected, setting additional flags")
+  set(CMAKE_C_FLAGS "-Wall -Wextra -Winline -Wcast-qual -std=gnu99 -Wshadow" CACHE STRING "Flags used by the compiler during all build types." FORCE)
+endif()
+
 #-----------------------------------------------------------------------------
 # Targets built within this project are exported at Install time for use
 # by other projects.
 #-----------------------------------------------------------------------------
 if(NOT MCHECKSUM_EXPORTED_TARGETS)
-  set(MCHECKSUM_EXPORTED_TARGETS "mchecksum-targets")
+  set(MCHECKSUM_EXPORTED_TARGETS "${MCHECKSUM_PACKAGE}-targets")
 endif()
 
 #------------------------------------------------------------------------------
 # Choose static or shared libraries.
 #------------------------------------------------------------------------------
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
+if(BUILD_SHARED_LIBS)
+  set(MCHECKSUM_BUILD_SHARED_LIBS 1)
+  set(MCHECKSUM_LIBTYPE SHARED)
+else()
+  set(MCHECKSUM_BUILD_SHARED_LIBS 0)
+  set(MCHECKSUM_LIBTYPE STATIC)
+endif()
 
 #------------------------------------------------------------------------------
 # Enable verbose error.
 #------------------------------------------------------------------------------
 option(MCHECKSUM_ENABLE_VERBOSE_ERROR "Print error messages to stderr." ON)
+if(MCHECKSUM_ENABLE_VERBOSE_ERROR)
+  set(MCHECKSUM_HAS_VERBOSE_ERROR 1)
+else()
+  set(MCHECKSUM_HAS_VERBOSE_ERROR 0)
+endif()
 
 #-------------------------------------------------------------------------------
 function(mchecksum_set_lib_options libtarget libname libtype)
@@ -154,12 +181,12 @@ function(mchecksum_set_lib_options libtarget libname libtype)
     if(WIN32 AND NOT MINGW)
       set(LIB_RELEASE_NAME "${libname}")
       set(LIB_DEBUG_NAME "${libname}_D")
-      set(LIB_VERSION ${MCHECKSUM_PACKAGE_VERSION_MAJOR})
     else()
       set(LIB_RELEASE_NAME "${libname}")
       set(LIB_DEBUG_NAME "${libname}_debug")
-      set(LIB_VERSION ${MCHECKSUM_PACKAGE_VERSION})
     endif()
+    set(LIB_VERSION ${MCHECKSUM_VERSION}.${MCHECKSUM_VERSION_PATCH})
+    set(API_VERSION ${MCHECKSUM_VERSION_MAJOR})
   else()
     if(WIN32 AND NOT MINGW)
       set(LIB_RELEASE_NAME "lib${libname}")
@@ -183,7 +210,7 @@ function(mchecksum_set_lib_options libtarget libname libtype)
       MINSIZEREL_OUTPUT_NAME     ${LIB_RELEASE_NAME}
       RELWITHDEBINFO_OUTPUT_NAME ${LIB_RELEASE_NAME}
       VERSION                    ${LIB_VERSION}
-      SOVERSION                  ${LIB_VERSION}
+      SOVERSION                  ${API_VERSION}
   )
 
   #----- Use MSVC Naming conventions for Shared Libraries
@@ -240,39 +267,41 @@ endif()
 #-----------------------------------------------------------------------------
 # Configure the config.cmake file for the build directory
 #-----------------------------------------------------------------------------
+set(MCHECKSUM_CONFIG_INSTALLED FALSE)
 configure_file(
-  ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum-config.cmake.build.in
-  ${MCHECKSUM_BINARY_DIR}/mchecksum-config.cmake @ONLY
+  ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}-config.cmake.in
+  ${MCHECKSUM_BINARY_DIR}/${MCHECKSUM_PACKAGE}-config.cmake @ONLY
 )
 
 #-----------------------------------------------------------------------------
 # Configure the config.cmake file for the install directory
 #-----------------------------------------------------------------------------
+set(MCHECKSUM_CONFIG_INSTALLED TRUE)
 configure_file(
-  ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum-config.cmake.install.in
+  ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}-config.cmake.in
   ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum-config.cmake @ONLY
 )
 
 install(
   FILES
-    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum-config.cmake
+    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}-config.cmake
   DESTINATION
-    ${MCHECKSUM_INSTALL_DATA_DIR}/cmake/mchecksum
+    ${MCHECKSUM_INSTALL_DATA_DIR}/cmake/${MCHECKSUM_PACKAGE}
 )
 
 #-----------------------------------------------------------------------------
 # Configure the mchecksum-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------
 configure_file(
-  ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum-config-version.cmake.in
-  ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum-config-version.cmake @ONLY
+  ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}-config-version.cmake.in
+  ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}-config-version.cmake @ONLY
 )
 
 install(
   FILES
-    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum-config-version.cmake
+    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}-config-version.cmake
   DESTINATION
-    ${MCHECKSUM_INSTALL_DATA_DIR}/cmake/mchecksum
+    ${MCHECKSUM_INSTALL_DATA_DIR}/cmake/${MCHECKSUM_PACKAGE}
 )
 
 #-----------------------------------------------------------------------------
@@ -280,13 +309,13 @@ install(
 #-----------------------------------------------------------------------------
 if(NOT WIN32)
   configure_file(
-    ${MCHECKSUM_SOURCE_DIR}/CMake/mchecksum.pc.in
-    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum.pc @ONLY
+    ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}.pc.in
+    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc @ONLY
   )
 
   install(
     FILES
-      ${MCHECKSUM_BINARY_DIR}/CMakeFiles/mchecksum.pc
+      ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc
     DESTINATION
       ${MCHECKSUM_INSTALL_LIB_DIR}/pkgconfig
   )
@@ -298,14 +327,14 @@ endif()
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
   set(CPACK_PACKAGE_DESCRIPTION_FILE ${MCHECKSUM_SOURCE_DIR}/README.md)
   set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
-  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Generic Checksum Library")
-  set(CPACK_PACKAGE_NAME "MChecksum")
-  set(CPACK_PACKAGE_VENDOR "Argonne National Laboratory / The HDF Group")
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${MCHECKSUM_PACKAGE_DESCRIPTION})
+  set(CPACK_PACKAGE_NAME ${MCHECKSUM_PACKAGE_NAME})
+  set(CPACK_PACKAGE_VENDOR ${MCHECKSUM_PACKAGE_VENDOR})
   set(CPACK_PACKAGE_VERSION_MAJOR ${MCHECKSUM_VERSION_MAJOR})
   set(CPACK_PACKAGE_VERSION_MINOR ${MCHECKSUM_VERSION_MINOR})
   set(CPACK_PACKAGE_VERSION_PATCH ${MCHECKSUM_VERSION_PATCH})
   set(CPACK_GENERATOR "TBZ2")
-  set(CPACK_SOURCE_PACKAGE_FILE_NAME ${MCHECKSUM_PACKAGE_TARNAME}-${MCHECKSUM_PACKAGE_VERSION})
+  set(CPACK_SOURCE_PACKAGE_FILE_NAME ${MCHECKSUM_PACKAGE}-${MCHECKSUM_VERSION_FULL})
   set(CPACK_SOURCE_IGNORE_FILES ".git*;/GitSetup/;/.git/;.swp$;.#;/#;.*~")
   set(CPACK_SOURCE_STRIP_FILES "")
   include(CPack)
