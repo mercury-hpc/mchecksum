@@ -70,8 +70,8 @@ include(MChecksumDetermineVersion)
 # Hard-coded version variables are read-in from a separate file. This makes it
 # easier to have a script to update version numbers automatically.
 file(STRINGS version.txt version_txt)
-extract_version_components("${version_txt}" "${CMAKE_PROJECT_NAME}")
-determine_version(${MCHECKSUM_SOURCE_DIR} ${GIT_EXECUTABLE} "${CMAKE_PROJECT_NAME}")
+extract_version_components("${version_txt}" "${PROJECT_NAME}")
+determine_version(${MCHECKSUM_SOURCE_DIR} ${GIT_EXECUTABLE} "${PROJECT_NAME}")
 set(MCHECKSUM_PACKAGE "mchecksum")
 set(MCHECKSUM_PACKAGE_NAME "MChecksum")
 set(MCHECKSUM_PACKAGE_DESCRIPTION "Mercury Checksum Library")
