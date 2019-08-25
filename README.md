@@ -98,5 +98,5 @@ Extra verbose information can be displayed by inserting "-VV". E.g.:
 
     ctest -VV .
 
-[documentation]: http://mercury-hpc.github.io/documentation/2016/11/23/mchecksum.html
+[documentation]: http://mercury-hpc.github.io/documentation/2018/10/24/mchecksum.html
 [isal]: https://github.com/01org/isa-l
