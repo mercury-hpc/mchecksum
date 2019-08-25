@@ -46,7 +46,7 @@ static int mchecksum_adler32_update(struct mchecksum_class *checksum_class,
 /* Local Variables */
 /*******************/
 
-static struct mchecksum_class mchecksum_crc32_g = {
+static const struct mchecksum_class mchecksum_crc32_g = {
     NULL,
     mchecksum_crc32_destroy,
     mchecksum_crc32_reset,
@@ -55,7 +55,7 @@ static struct mchecksum_class mchecksum_crc32_g = {
     mchecksum_crc32_update
 };
 
-static struct mchecksum_class mchecksum_adler32_g = {
+static const struct mchecksum_class mchecksum_adler32_g = {
     NULL,
     mchecksum_adler32_destroy,
     mchecksum_adler32_reset,

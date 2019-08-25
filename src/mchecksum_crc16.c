@@ -40,7 +40,7 @@ static int mchecksum_crc16_update(struct mchecksum_class *checksum_class,
 /* Local Variables */
 /*******************/
 
-static struct mchecksum_class mchecksum_crc16_g = {
+static const struct mchecksum_class mchecksum_crc16_g = {
     NULL,
     mchecksum_crc16_destroy,
     mchecksum_crc16_reset,

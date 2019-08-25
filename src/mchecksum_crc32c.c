@@ -27,6 +27,18 @@
 /* Local Macros */
 /****************/
 
+/* Check for SSE 4.2.  SSE 4.2 was first supported in Nehalem processors
+ * introduced in November, 2008.  This does not check for the existence of the
+ * cpuid instruction itself, which was introduced on the 486SL in 1992, so this
+ * will fail on earlier x86 processors.  cpuid works on all Pentium and later
+ * processors. */
+#define CHECK_SSE42(have) do {                                  \
+    unsigned int eax, ecx;                                      \
+    eax = 1;                                                    \
+    __asm__("cpuid" : "=c"(ecx) : "a"(eax) : "%ebx", "%edx");   \
+    (have) = (ecx >> 20) & 1;                                   \
+} while (0)
+
 /************************************/
 /* Local Type and Struct Definition */
 /************************************/
@@ -42,12 +54,16 @@ static int mchecksum_crc32c_get(struct mchecksum_class *checksum_class,
     void *buf, size_t size, int finalize);
 static int mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
     const void *data, size_t size);
+#if !defined(MCHECKSUM_HAS_ISAL) && defined(MCHECKSUM_HAS_SSE4_2)
+static int mchecksum_crc32c_update_sse42(struct mchecksum_class *checksum_class,
+    const void *data, size_t size);
+#endif
 
 /*******************/
 /* Local Variables */
 /*******************/
 
-static struct mchecksum_class mchecksum_crc32_g = {
+static const struct mchecksum_class mchecksum_crc32_g = {
     NULL,
     mchecksum_crc32c_destroy,
     mchecksum_crc32c_reset,
@@ -56,7 +72,7 @@ static struct mchecksum_class mchecksum_crc32_g = {
     mchecksum_crc32c_update
 };
 
-#if !defined(MCHECKSUM_HAS_SSE4_2) && !defined(MCHECKSUM_HAS_ISAL)
+#ifndef MCHECKSUM_HAS_ISAL
 static const mchecksum_uint32_t table_[256] = {
     0x00000000L, 0xF26B8303L, 0xE13B70F7L, 0x1350F3F4L, 0xC79A971FL,
     0x35F1141CL, 0x26A1E7E8L, 0xD4CA64EBL, 0x8AD958CFL, 0x78B2DBCCL,
@@ -151,6 +167,9 @@ int
 mchecksum_crc32c_init(struct mchecksum_class *checksum_class)
 {
     int ret = MCHECKSUM_SUCCESS;
+#if !defined(MCHECKSUM_HAS_ISAL) && defined(MCHECKSUM_HAS_SSE4_2)
+    int has_sse42;
+#endif
 
     if (!checksum_class) {
         MCHECKSUM_ERROR_DEFAULT("NULL checksum class");
@@ -159,6 +178,12 @@ mchecksum_crc32c_init(struct mchecksum_class *checksum_class)
     }
 
     *checksum_class = mchecksum_crc32_g;
+#if !defined(MCHECKSUM_HAS_ISAL) && defined(MCHECKSUM_HAS_SSE4_2)
+    /* Verify support for SSE 4.2 at runtime to prevent cross-compile issues */
+    CHECK_SSE42(has_sse42);
+    if (has_sse42)
+        checksum_class->update = mchecksum_crc32c_update_sse42;
+#endif
 
     checksum_class->data = malloc(sizeof(mchecksum_uint32_t));
     if (!checksum_class->data) {
@@ -222,34 +247,40 @@ done:
     return ret;
 }
 
-/*---------------------------------------------------------------------------*/
 #ifndef MCHECKSUM_HAS_ISAL
-static MCHECKSUM_INLINE void
-mchecksum_crc32c_update_byte(struct mchecksum_class *checksum_class,
+/*---------------------------------------------------------------------------*/
+static int
+mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
     const void *data, size_t size)
 {
     mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
     const unsigned char *cur = (const unsigned char *) data;
 
     while (size--)
-#ifdef MCHECKSUM_HAS_SSE4_2
-        *state = _mm_crc32_u8(*state, *cur++);
-#else
         *state = (*state >> 8) ^ table_[(*state ^ *cur++) & 0xFFL];
-#endif
+
+    return MCHECKSUM_SUCCESS;
 }
-#endif
+
+#ifdef MCHECKSUM_HAS_SSE4_2
+/*---------------------------------------------------------------------------*/
+static MCHECKSUM_INLINE void
+mchecksum_crc32c_update_byte_sse42(struct mchecksum_class *checksum_class,
+    const void *data, size_t size)
+{
+    mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
+    const unsigned char *cur = (const unsigned char *) data;
+
+    while (size--)
+        *state = _mm_crc32_u8(*state, *cur++);
+}
 
 /*---------------------------------------------------------------------------*/
 static int
-mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
+mchecksum_crc32c_update_sse42(struct mchecksum_class *checksum_class,
     const void *data, size_t size)
 {
-#if defined(MCHECKSUM_HAS_SSE4_2) || defined(MCHECKSUM_HAS_ISAL)
     mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
-#if defined(MCHECKSUM_HAS_ISAL)
-    *state = crc32_iscsi((unsigned char *) data, (int) size, *state);
-#elif defined(MCHECKSUM_HAS_SSE4_2)
 #ifdef __x86_64__
     const unsigned long long *cur = (const unsigned long long *) data;
 #else
@@ -266,11 +297,22 @@ mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
 #endif /* __x86_64__ */
 
     if (remainder)
-        mchecksum_crc32c_update_byte(checksum_class, cur, remainder);
-#endif /* defined(MCHECKSUM_HAS_SSE4_2) || defined(MCHECKSUM_HAS_ISAL) */
-#else
-    mchecksum_crc32c_update_byte(checksum_class, data, size);
-#endif
+        mchecksum_crc32c_update_byte_sse42(checksum_class, cur, remainder);
 
     return MCHECKSUM_SUCCESS;
 }
+
+#endif /* MCHECKSUM_HAS_SSE4_2 */
+#else
+/*---------------------------------------------------------------------------*/
+static int
+mchecksum_crc32c_update(struct mchecksum_class *checksum_class,
+    const void *data, size_t size)
+{
+    mchecksum_uint32_t *state = (mchecksum_uint32_t *) checksum_class->data;
+
+    *state = crc32_iscsi((unsigned char *) data, (int) size, *state);
+
+    return MCHECKSUM_SUCCESS;
+}
+#endif

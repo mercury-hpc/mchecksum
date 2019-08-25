@@ -30,21 +30,23 @@ if(MCHECKSUM_USE_ZLIB)
 endif()
 
 # SSE 4.2
-try_run(MCHECKSUM_CAN_RUN_SSE4_2 MCHECKSUM_CAN_COMPILE_SSE4_2
+if(WIN32)
+  set(MCHECKSUM_SSE4_2_OPTIONS /arch:SSE4.2)
+else()
+  set(MCHECKSUM_SSE4_2_OPTIONS -msse4.2)
+endif()
+try_compile(MCHECKSUM_CAN_COMPILE_SSE4_2
   ${CMAKE_BINARY_DIR} ${MCHECKSUM_CMAKE_MODULE_PATH}/CheckSSE42.c
+  COMPILE_DEFINITIONS ${MCHECKSUM_SSE4_2_OPTIONS}
   OUTPUT_VARIABLE CHECK_SSE4_2_OUTPUT)
-option(MCHECKSUM_USE_SSE4_2 "Use SSE 4.2 instruction set." ${MCHECKSUM_CAN_RUN_SSE4_2})
+option(MCHECKSUM_USE_SSE4_2 "Use SSE 4.2 instruction set." ${MCHECKSUM_CAN_COMPILE_SSE4_2})
 if(MCHECKSUM_USE_SSE4_2)
   message(STATUS "Using SSE 4.2 instruction set.")
-  if(NOT ${MCHECKSUM_CAN_RUN_SSE4_2})
-    message(WARNING "This platform is not capable of running SSE 4.2 instructions.")
+  if(NOT ${MCHECKSUM_CAN_COMPILE_SSE4_2})
+    message(FATAL_ERROR "This platform is not capable of compiling with SSE 4.2 instructions.")
   endif()
+  add_compile_options(${MCHECKSUM_SSE4_2_OPTIONS})
   set(MCHECKSUM_HAS_SSE4_2 1)
-  if(WIN32)
-    add_definitions(/arch:SSE4.2)
-  else()
-    add_definitions(-msse4.2)
-  endif()
 endif(MCHECKSUM_USE_SSE4_2)
 
 # ISA-L
