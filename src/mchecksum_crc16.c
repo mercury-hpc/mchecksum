@@ -170,8 +170,8 @@ mchecksum_crc16_update(struct mchecksum_class *checksum_class,
     const unsigned char *end = cur + size;
 
     while (cur < end) {
-        *state = ((mchecksum_uint16_t) (*state << 8))
-            ^ table_[((*state >> 8) ^ *cur++) & 0xff];
+        *state = (mchecksum_uint16_t)(((mchecksum_uint16_t) (*state << 8))
+            ^ table_[((*state >> 8) ^ *cur++) & 0xff]);
     }
 #endif
 
