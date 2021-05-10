@@ -12,6 +12,7 @@ foreach(p
     CMP0074 # CMake 3.12
     CMP0075 # CMake 3.12
     CMP0083 # CMake 3.14
+    CMP0093 # CMake 3.15
   )
   if(POLICY ${p})
     cmake_policy(SET ${p} NEW)
@@ -327,6 +328,7 @@ endif()
 # CPack
 #-----------------------------------------------------------------------------
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
+  set(CPACK_GENERATOR "TBZ2")
   set(CPACK_PACKAGE_DESCRIPTION_FILE ${MCHECKSUM_SOURCE_DIR}/README.md)
   set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${MCHECKSUM_PACKAGE_DESCRIPTION})
@@ -335,9 +337,27 @@ if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
   set(CPACK_PACKAGE_VERSION_MAJOR ${MCHECKSUM_VERSION_MAJOR})
   set(CPACK_PACKAGE_VERSION_MINOR ${MCHECKSUM_VERSION_MINOR})
   set(CPACK_PACKAGE_VERSION_PATCH ${MCHECKSUM_VERSION_PATCH})
-  set(CPACK_GENERATOR "TBZ2")
+  set(CPACK_SOURCE_GENERATOR "TBZ2")
   set(CPACK_SOURCE_PACKAGE_FILE_NAME ${MCHECKSUM_PACKAGE}-${MCHECKSUM_VERSION_FULL})
-  set(CPACK_SOURCE_IGNORE_FILES ".git*;/GitSetup/;/.git/;.swp$;.#;/#;.*~")
+  set(CPACK_SOURCE_IGNORE_FILES
+    # Files specific to version control
+    "/\\\\.git/"
+    "/\\\\.gitattributes$"
+    "/\\\\.github/"
+    "/\\\\.gitignore$"
+
+    # IDE files
+    "/\\\\.vscode/"
+
+    # Build
+    "/build/"
+
+    # Temporary files
+    "\\\\.swp$"
+    "\\\\.#"
+    "/#"
+    "~$"
+  )
   set(CPACK_SOURCE_STRIP_FILES "")
   include(CPack)
 endif()

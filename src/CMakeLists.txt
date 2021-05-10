@@ -100,6 +100,26 @@ if(MCHECKSUM_HAS_ZLIB)
   set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} crc32 adler32)
 endif()
 
+#-----------------------------------------------------------------------------
+# Specify project public header files to be installed
+#-----------------------------------------------------------------------------
+set(MCHECKSUM_PUBLIC_HEADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
+  ${CMAKE_CURRENT_BINARY_DIR}/mchecksum_config.h
+)
+
+#-----------------------------------------------------------------------------
+# Specify project private header files
+#-----------------------------------------------------------------------------
+set(MCHECKSUM_PRIVATE_HEADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc16.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc32c.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc64.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_plugin.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.h
+)
+
 #----------------------------------------------------------------------------
 # Libraries
 #----------------------------------------------------------------------------
@@ -112,7 +132,9 @@ foreach(item ${MCHECKSUM_SYSTEM_INCLUDE_PATH})
 endforeach()
 
 # mchecksum
-add_library(mchecksum ${MCHECKSUM_SRCS})
+add_library(mchecksum ${MCHECKSUM_SRCS}
+  ${MCHECKSUM_PRIVATE_HEADERS} ${MCHECKSUM_PUBLIC_HEADERS}
+)
 target_include_directories(mchecksum
   PUBLIC  "$<BUILD_INTERFACE:${MCHECKSUM_BUILD_INCLUDE_DEPENDENCIES}>"
            $<INSTALL_INTERFACE:${MCHECKSUM_INSTALL_INCLUDE_INTERFACE}>
@@ -127,29 +149,11 @@ mchecksum_set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})
 if(MCHECKSUM_ENABLE_COVERAGE)
   set_coverage_flags(mchecksum)
 endif()
+set_target_properties(mchecksum PROPERTIES
+  PUBLIC_HEADER "${MCHECKSUM_PUBLIC_HEADERS}"
+)
 
 set(MCHECKSUM_EXPORTED_LIBS mchecksum ${MCHECKSUM_EXPORTED_LIBS})
-
-#-----------------------------------------------------------------------------
-# Specify project header files to be installed
-#-----------------------------------------------------------------------------
-set(MCHECKSUM_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
-  ${CMAKE_CURRENT_BINARY_DIR}/mchecksum_config.h
-)
-
-#-----------------------------------------------------------------------------
-# Add file(s) to CMake Install
-#-----------------------------------------------------------------------------
-install(
-  FILES
-    ${MCHECKSUM_HEADERS}
-  DESTINATION
-    ${MCHECKSUM_INSTALL_INCLUDE_DIR}
-  COMPONENT
-    headers
-)
 
 #---------------------------------------------------------------------------
 # Add Target(s) to CMake Install
@@ -161,6 +165,7 @@ install(
     ${MCHECKSUM_EXPORTED_TARGETS}
   LIBRARY DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
   ARCHIVE DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
+  PUBLIC_HEADER DESTINATION ${MCHECKSUM_INSTALL_INCLUDE_DIR}
   RUNTIME DESTINATION ${MCHECKSUM_INSTALL_BIN_DIR}
 )
 
@@ -174,6 +179,7 @@ install(
     ${MCHECKSUM_EXTERNAL_EXPORTED_TARGETS}
   LIBRARY DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
   ARCHIVE DESTINATION ${MCHECKSUM_INSTALL_LIB_DIR}
+  PUBLIC_HEADER DESTINATION ${MCHECKSUM_INSTALL_INCLUDE_DIR}
   RUNTIME DESTINATION ${MCHECKSUM_INSTALL_BIN_DIR}
 )
 endif()
