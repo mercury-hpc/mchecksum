@@ -105,7 +105,6 @@ endif()
 #-----------------------------------------------------------------------------
 set(MCHECKSUM_PUBLIC_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
   ${CMAKE_CURRENT_BINARY_DIR}/mchecksum_config.h
 )
 
@@ -113,11 +112,8 @@ set(MCHECKSUM_PUBLIC_HEADERS
 # Specify project private header files
 #-----------------------------------------------------------------------------
 set(MCHECKSUM_PRIVATE_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc16.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc32c.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_crc64.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_plugin.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_zlib.h
+${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_error.h
+${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_plugin.h
 )
 
 #----------------------------------------------------------------------------

@@ -4,14 +4,17 @@
 #  ISAL_INCLUDE_DIRS - The ISA-L include directories
 #  ISAL_LIBRARIES - The libraries needed to use ISA-L
 
+find_package(PkgConfig)
+pkg_check_modules(PC_ISAL libisal)
+
 find_path(ISAL_INCLUDE_DIR isa-l.h
-  HINTS /usr/local/include /usr/include)
+  HINTS ${PC_ISAL_INCLUDEDIR} ${PC_ISAL_INCLUDE_DIRS})
 
 find_library(ISAL_LIBRARY NAMES isal
-  HINTS /usr/local/lib /usr/lib)
+  HINTS ${PC_ISAL_LIBDIR} ${PC_ISAL_LIBRARY_DIRS})
 
-set(ISAL_LIBRARIES ${ISAL_LIBRARY})
 set(ISAL_INCLUDE_DIRS ${ISAL_INCLUDE_DIR})
+set(ISAL_LIBRARIES ${ISAL_LIBRARY})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set ISAL_FOUND to TRUE

@@ -1,11 +1,7 @@
-/*
- * Copyright (C) 2013-2019 Argonne National Laboratory, Department of Energy,
- *                    UChicago Argonne, LLC and The HDF Group.
- * All rights reserved.
+/**
+ * Copyright (c) 2013-2021 UChicago Argonne, LLC and The HDF Group.
  *
- * The full copyright notice, including terms governing use, modification,
- * and redistribution, is contained in the COPYING file that can be
- * found at the root of the source code distribution tree.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef MCHECKSUM_ERROR_H
@@ -13,35 +9,110 @@
 
 #include "mchecksum_config.h"
 
+#ifdef MCHECKSUM_HAS_HGLOG
+#    include <mercury_log.h>
+#endif
+
 /*****************/
 /* Public Macros */
 /*****************/
 
-#define MCHECKSUM_SUCCESS  1
-#define MCHECKSUM_FAIL    -1
-
-/* For compatibility */
-#if defined(__STDC_VERSION__) &&  (__STDC_VERSION__ < 199901L)
-# if defined(__GNUC__) && (__GNUC__ >= 2)
-#  define __func__ __FUNCTION__
-# else
-#  define __func__ "<unknown>"
-# endif
-#elif defined(_WIN32)
-# define __func__ __FUNCTION__
-#endif
-
-/* Default error macro */
-#ifdef MCHECKSUM_HAS_VERBOSE_ERROR
-# include <stdio.h>
-# define MCHECKSUM_ERROR_DEFAULT(x) do {        \
-    fprintf(stderr, "Error "                    \
-        "in %s:%d (%s): "                       \
-        "%s.\n",                                \
-        __FILE__, __LINE__, __func__, x);       \
-  } while(0)
+#ifdef MCHECKSUM_HAS_HGLOG
+extern MCHECKSUM_PRIVATE HG_LOG_OUTLET_DECL(mchecksum);
+#    define MCHECKSUM_LOG_ERROR(...)                                           \
+        HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_ERROR, __VA_ARGS__)
+#    define MCHECKSUM_LOG_WARNING(...)                                         \
+        HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_WARNING, __VA_ARGS__)
+#    ifdef MCHECKSUM_HAS_DEBUG
+#        define MCHECKSUM_LOG_DEBUG(...)                                       \
+            HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#    else
+#        define MCHECKSUM_LOG_DEBUG(...) (void) 0
+#    endif
 #else
-# define MCHECKSUM_ERROR_DEFAULT(x) (void)0
+#    include <stdio.h>
+#    define MCHECKSUM_LOG_WRITE(_stream, ...)                                  \
+        do {                                                                   \
+            fprintf(_stream, __VA_ARGS__);                                     \
+            fprintf(_stream, "\n");                                            \
+        } while (0)
+#    ifdef MCHECKSUM_HAS_DEBUG
+#        define MCHECKSUM_LOG_ERROR(...)                                       \
+            MCHECKSUM_LOG_WRITE(stderr, __VA_ARGS__)
+#        define MCHECKSUM_LOG_WARNING(...)                                     \
+            MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
+#        define MCHECKSUM_LOG_DEBUG(...)                                       \
+            MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
+#    else
+#        define MCHECKSUM_LOG_ERROR(...)   (void) 0
+#        define MCHECKSUM_LOG_WARNING(...) (void) 0
+#        define MCHECKSUM_LOG_DEBUG(...)   (void) 0
+#    endif
 #endif
+
+/* Branch predictor hints */
+#ifndef _WIN32
+#    define likely(x)   __builtin_expect(!!(x), 1)
+#    define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#    define likely(x)   (x)
+#    define unlikely(x) (x)
+#endif
+
+/* Error macros */
+#define MCHECKSUM_GOTO_DONE(label, ret, ret_val)                               \
+    do {                                                                       \
+        ret = ret_val;                                                         \
+        goto label;                                                            \
+    } while (0)
+
+#define MCHECKSUM_GOTO_ERROR(label, ret, err_val, ...)                         \
+    do {                                                                       \
+        MCHECKSUM_LOG_ERROR(__VA_ARGS__);                                      \
+        ret = err_val;                                                         \
+        goto label;                                                            \
+    } while (0)
+
+/* Check for rc value and goto label */
+#define MCHECKSUM_CHECK_RC_ERROR(label, rc, ...)                               \
+    do {                                                                       \
+        if (unlikely(rc != 0)) {                                               \
+            MCHECKSUM_LOG_ERROR(__VA_ARGS__);                                  \
+            goto label;                                                        \
+        }                                                                      \
+    } while (0)
+
+/* Check for cond, set ret to err_val and goto label */
+#define MCHECKSUM_CHECK_ERROR(cond, label, ret, err_val, ...)                  \
+    do {                                                                       \
+        if (unlikely(cond)) {                                                  \
+            MCHECKSUM_LOG_ERROR(__VA_ARGS__);                                  \
+            ret = err_val;                                                     \
+            goto label;                                                        \
+        }                                                                      \
+    } while (0)
+
+#define MCHECKSUM_CHECK_ERROR_NORET(cond, label, ...)                          \
+    do {                                                                       \
+        if (unlikely(cond)) {                                                  \
+            MCHECKSUM_LOG_ERROR(__VA_ARGS__);                                  \
+            goto label;                                                        \
+        }                                                                      \
+    } while (0)
+
+#define MCHECKSUM_CHECK_ERROR_DONE(cond, ...)                                  \
+    do {                                                                       \
+        if (unlikely(cond)) {                                                  \
+            MCHECKSUM_LOG_ERROR(__VA_ARGS__);                                  \
+        }                                                                      \
+    } while (0)
+
+/* Check for cond and print warning */
+#define MCHECKSUM_CHECK_WARNING(cond, ...)                                     \
+    do {                                                                       \
+        if (unlikely(cond)) {                                                  \
+            MCHECKSUM_LOG_WARNING(__VA_ARGS__);                                \
+        }                                                                      \
+    } while (0)
 
 #endif /* MCHECKSUM_ERROR_H */

@@ -1,164 +1,150 @@
-/*
- * Copyright (C) 2013-2019 Argonne National Laboratory, Department of Energy,
- *                    UChicago Argonne, LLC and The HDF Group.
- * All rights reserved.
+/**
+ * Copyright (c) 2013-2021 UChicago Argonne, LLC and The HDF Group.
  *
- * The full copyright notice, including terms governing use, modification,
- * and redistribution, is contained in the COPYING file that can be
- * found at the root of the source code distribution tree.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "mchecksum_crc64.h"
-#include "mchecksum_crc16.h"
-#include "mchecksum_crc32c.h"
-#ifdef MCHECKSUM_HAS_ZLIB
-#include "mchecksum_zlib.h"
-#endif
+#include "mchecksum_plugin.h"
 
 #include "mchecksum_error.h"
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
+/****************/
+/* Local Macros */
+/****************/
+
+/************************************/
+/* Local Type and Struct Definition */
+/************************************/
+
+/********************/
+/* Local Prototypes */
+/********************/
+
+/* Plugin class table */
+/* clang-format off */
+static const struct mchecksum_ops *const mchecksum_ops_table_g[] = {
+    &MCHECKSUM_PLUGIN_OPS(crc16),
+    &MCHECKSUM_PLUGIN_OPS(crc32c),
+    &MCHECKSUM_PLUGIN_OPS(crc64),
+#ifdef MCHECKSUM_HAS_ZLIB
+    &MCHECKSUM_PLUGIN_OPS(crc32),
+    &MCHECKSUM_PLUGIN_OPS(adler32),
+#endif
+    NULL};
+/* clang-format on */
 
 /*---------------------------------------------------------------------------*/
 int
-mchecksum_init(const char *hash_method, mchecksum_object_t *checksum)
+mchecksum_init(const char *hash_method, mchecksum_object_t *checksum_p)
 {
-    struct mchecksum_class *checksum_class = NULL;
-    int ret = MCHECKSUM_SUCCESS;
+    struct mchecksum_object *object = NULL;
+    int rc, i;
 
-    checksum_class = (struct mchecksum_class *) malloc(sizeof(struct mchecksum_class));
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Could not allocate checksum class");
-        ret = MCHECKSUM_FAIL;
-        goto done;
-    }
+    object = (struct mchecksum_object *) malloc(sizeof(*object));
+    MCHECKSUM_CHECK_ERROR(
+        object == NULL, error, rc, -1, "Could not allocate checksum class");
 
-    if (strcmp(hash_method, "crc64") == 0) {
-        if (mchecksum_crc64_init(checksum_class) != MCHECKSUM_SUCCESS) {
-            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc64 checksum");
-            ret = MCHECKSUM_FAIL;
-            goto done;
-        }
-    } else if (strcmp(hash_method, "crc16") == 0) {
-        if (mchecksum_crc16_init(checksum_class) != MCHECKSUM_SUCCESS) {
-            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc16 checksum");
-            ret = MCHECKSUM_FAIL;
-            goto done;
-        }
-    } else if (strcmp(hash_method, "crc32c") == 0) {
-        if (mchecksum_crc32c_init(checksum_class) != MCHECKSUM_SUCCESS) {
-            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc32c checksum");
-            ret = MCHECKSUM_FAIL;
-            goto done;
-        }
-#ifdef MCHECKSUM_HAS_ZLIB
-    } else if (strcmp(hash_method, "crc32") == 0) {
-        if (mchecksum_crc32_init(checksum_class) != MCHECKSUM_SUCCESS) {
-            MCHECKSUM_ERROR_DEFAULT("Could not initialize crc32 checksum");
-            ret = MCHECKSUM_FAIL;
-            goto done;
-        }
-    } else if (strcmp(hash_method, "adler32") == 0) {
-        if (mchecksum_adler32_init(checksum_class) != MCHECKSUM_SUCCESS) {
-            MCHECKSUM_ERROR_DEFAULT("Could not initialize adler32 checksum");
-            ret = MCHECKSUM_FAIL;
-            goto done;
-        }
-#endif
-     } else {
-        MCHECKSUM_ERROR_DEFAULT("Unknown hash method");
-        ret = MCHECKSUM_FAIL;
-        goto done;
-    }
+    for (i = 0; mchecksum_ops_table_g[i] != NULL; i++)
+        if (strcmp(hash_method, mchecksum_ops_table_g[i]->name) == 0)
+            break;
 
-    *checksum = (mchecksum_object_t) checksum_class;
+    object->ops = mchecksum_ops_table_g[i];
+    MCHECKSUM_CHECK_ERROR(object->ops == NULL, error, rc, -1,
+        "Unknown hash method (%s)", hash_method);
 
-done:
-    if (ret != MCHECKSUM_SUCCESS) {
-        free(checksum_class);
-    }
+    rc = object->ops->init(&object->data);
+    MCHECKSUM_CHECK_RC_ERROR(error, rc, "Could not initialize checksum");
 
-    return ret;
+    *checksum_p = object;
+
+    return 0;
+
+error:
+    free(object);
+
+    return rc;
 }
 
 /*---------------------------------------------------------------------------*/
-int
+void
 mchecksum_destroy(mchecksum_object_t checksum)
 {
-    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
-    int ret = MCHECKSUM_SUCCESS;
+    struct mchecksum_object *object = (struct mchecksum_object *) checksum;
 
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
-        ret = MCHECKSUM_FAIL;
-        goto done;
-    }
+    if (object == NULL)
+        return;
 
-    if (checksum_class->destroy(checksum_class) != MCHECKSUM_SUCCESS) {
-        MCHECKSUM_ERROR_DEFAULT("Could not destroy checksum");
-        ret = MCHECKSUM_FAIL;
-        goto done;
-    }
-
-    free(checksum_class);
-
-done:
-    return ret;
+    object->ops->destroy(object->data);
+    free(object);
 }
 
 /*---------------------------------------------------------------------------*/
 int
 mchecksum_reset(mchecksum_object_t checksum)
 {
-    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
+    struct mchecksum_object *object = (struct mchecksum_object *) checksum;
+    int rc;
 
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
-        return MCHECKSUM_FAIL;
-    }
+    MCHECKSUM_CHECK_ERROR(
+        object == NULL, error, rc, -1, "Checksum not initialized");
 
-    return checksum_class->reset(checksum_class);
+    object->ops->reset(object->data);
+
+    return 0;
+
+error:
+    return rc;
 }
 
 /*---------------------------------------------------------------------------*/
 size_t
 mchecksum_get_size(mchecksum_object_t checksum)
 {
-    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
+    struct mchecksum_object *object = (struct mchecksum_object *) checksum;
+    size_t rc;
 
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
-        return 0;
-    }
+    MCHECKSUM_CHECK_ERROR(
+        object == NULL, error, rc, 0, "Checksum not initialized");
 
-    return checksum_class->get_size(checksum_class);
+    return object->ops->get_size(object->data);
+
+error:
+    return rc;
 }
 
 /*---------------------------------------------------------------------------*/
 int
 mchecksum_get(mchecksum_object_t checksum, void *buf, size_t size, int finalize)
 {
-    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
+    struct mchecksum_object *object = (struct mchecksum_object *) checksum;
+    int rc;
 
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
-        return MCHECKSUM_FAIL;
-    }
+    MCHECKSUM_CHECK_ERROR(
+        object == NULL, error, rc, -1, "Checksum not initialized");
 
-    return checksum_class->get(checksum_class, buf, size, finalize);
+    return object->ops->get(object->data, buf, size, finalize);
+
+error:
+    return rc;
 }
 
 /*---------------------------------------------------------------------------*/
 int
-mchecksum_update(mchecksum_object_t checksum, const void *data, size_t size)
+mchecksum_update(mchecksum_object_t checksum, const void *buf, size_t size)
 {
-    struct mchecksum_class *checksum_class = (struct mchecksum_class *) checksum;
+    struct mchecksum_object *object = (struct mchecksum_object *) checksum;
+    int rc;
 
-    if (!checksum_class) {
-        MCHECKSUM_ERROR_DEFAULT("Checksum not initialized");
-        return MCHECKSUM_FAIL;
-    }
+    MCHECKSUM_CHECK_ERROR(
+        object == NULL, error, rc, -1, "Checksum not initialized");
 
-    return checksum_class->update(checksum_class, data, size);
+    object->ops->update(object->data, buf, size);
+
+    return 0;
+
+error:
+    return rc;
 }

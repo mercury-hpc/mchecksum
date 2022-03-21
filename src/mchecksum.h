@@ -1,11 +1,7 @@
-/*
- * Copyright (C) 2013-2019 Argonne National Laboratory, Department of Energy,
- *                    UChicago Argonne, LLC and The HDF Group.
- * All rights reserved.
+/**
+ * Copyright (c) 2013-2021 UChicago Argonne, LLC and The HDF Group.
  *
- * The full copyright notice, including terms governing use, modification,
- * and redistribution, is contained in the COPYING file that can be
- * found at the root of the source code distribution tree.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef MCHECKSUM_H
@@ -17,16 +13,16 @@
 /* Public Type and Struct Definition */
 /*************************************/
 
-typedef void *mchecksum_object_t;
+typedef struct mchecksum_object *mchecksum_object_t;
 
 /*****************/
 /* Public Macros */
 /*****************/
 
-#define MCHECKSUM_OBJECT_NULL ((mchecksum_object_t)0)
+#define MCHECKSUM_OBJECT_NULL ((mchecksum_object_t) 0)
 
-#define MCHECKSUM_NOFINALIZE  0
-#define MCHECKSUM_FINALIZE    1
+#define MCHECKSUM_NOFINALIZE (0)
+#define MCHECKSUM_FINALIZE   (1)
 
 /*********************/
 /* Public Prototypes */
@@ -43,19 +39,19 @@ extern "C" {
  *                              Available methods are: "crc16", "crc64"
  * \param checksum [OUT]        pointer to abstract checksum
  *
- * \return Non-negative on success or negative on failure
+ * \return 0 success or negative value on failure
  */
-MCHECKSUM_EXPORT int
-mchecksum_init(const char *hash_method, mchecksum_object_t *checksum);
+MCHECKSUM_PUBLIC int
+mchecksum_init(const char *hash_method, mchecksum_object_t *checksum_p);
 
 /**
  * Destroy the checksum.
  *
  * \param checksum [IN/OUT]     abstract checksum
  *
- * \return Non-negative on success or negative on failure
+ * \return 0 on success or negative value on failure
  */
-MCHECKSUM_EXPORT int
+MCHECKSUM_PUBLIC void
 mchecksum_destroy(mchecksum_object_t checksum);
 
 /**
@@ -63,9 +59,9 @@ mchecksum_destroy(mchecksum_object_t checksum);
  *
  * \param checksum [IN/OUT]     abstract checksum
  *
- * \return Non-negative on success or negative on failure
+ * \return 0 on success or negative value on failure
  */
-MCHECKSUM_EXPORT int
+MCHECKSUM_PUBLIC int
 mchecksum_reset(mchecksum_object_t checksum);
 
 /**
@@ -75,7 +71,7 @@ mchecksum_reset(mchecksum_object_t checksum);
  *
  * \return Non-negative value
  */
-MCHECKSUM_EXPORT size_t
+MCHECKSUM_PUBLIC size_t
 mchecksum_get_size(mchecksum_object_t checksum);
 
 /**
@@ -91,22 +87,23 @@ mchecksum_get_size(mchecksum_object_t checksum);
  *       MCHECKSUM_NOFINALIZE   More data might be added to this checksum
  *                              later
  *
- * \return Non-negative on success or negative on failure
+ * \return 0 on success or negative value on failure
  */
-MCHECKSUM_EXPORT int
-mchecksum_get(mchecksum_object_t checksum, void *buf, size_t size, int finalize);
+MCHECKSUM_PUBLIC int
+mchecksum_get(
+    mchecksum_object_t checksum, void *buf, size_t size, int finalize);
 
 /**
  * Accumulates a partial checksum of the input data.
  *
  * \param checksum [IN/OUT]     abstract checksum
- * \param data [IN]             pointer to buffer
+ * \param buf [IN]              pointer to buffer
  * \param size [IN]             size of buffer
  *
- * \return Non-negative on success or negative on failure
+ * \return 0 on success or negative value on failure
  */
-MCHECKSUM_EXPORT int
-mchecksum_update(mchecksum_object_t checksum, const void *data, size_t size);
+MCHECKSUM_PUBLIC int
+mchecksum_update(mchecksum_object_t checksum, const void *buf, size_t size);
 
 #ifdef __cplusplus
 }

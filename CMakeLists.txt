@@ -138,12 +138,18 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build." FORCE)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
+    "MinSizeRel" "RelWithDebInfo" "Asan" "Ubsan")
 endif()
 
 if(NOT CMAKE_C_FLAGS AND CMAKE_COMPILER_IS_GNUCC)
   message(STATUS "GCC detected, setting additional flags")
   set(CMAKE_C_FLAGS "-Wall -Wextra -Winline -Wcast-qual -std=gnu99 -Wshadow" CACHE STRING "Flags used by the compiler during all build types." FORCE)
+endif()
+
+# Detect Asan/Ubsan compiler flags
+if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
+  include(CheckAsan)
+  include(CheckUbsan)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -167,13 +173,13 @@ else()
 endif()
 
 #------------------------------------------------------------------------------
-# Enable verbose error.
+# Enable debug output.
 #------------------------------------------------------------------------------
-option(MCHECKSUM_ENABLE_VERBOSE_ERROR "Print error messages to stderr." ON)
-if(MCHECKSUM_ENABLE_VERBOSE_ERROR)
-  set(MCHECKSUM_HAS_VERBOSE_ERROR 1)
+option(MCHECKSUM_ENABLE_DEBUG "Enable debug statements." OFF)
+if(MCHECKSUM_ENABLE_DEBUG)
+  set(MCHECKSUM_HAS_DEBUG 1)
 else()
-  set(MCHECKSUM_HAS_VERBOSE_ERROR 0)
+  set(MCHECKSUM_HAS_DEBUG 0)
 endif()
 
 #-------------------------------------------------------------------------------
@@ -211,7 +217,7 @@ function(mchecksum_set_lib_options libtarget libname libtype)
       OUTPUT_NAME_MINSIZEREL     ${LIB_RELEASE_NAME}
       OUTPUT_NAME_RELWITHDEBINFO ${LIB_RELEASE_NAME}
       OUTPUT_NAME_ASAN           ${LIB_DEBUG_NAME}
-      OUTPUT_NAME_TSAN           ${LIB_DEBUG_NAME}
+      OUTPUT_NAME_UBSAN          ${LIB_DEBUG_NAME}
       VERSION                    ${LIB_VERSION}
       SOVERSION                  ${API_VERSION}
   )
@@ -330,7 +336,7 @@ endif()
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
   set(CPACK_GENERATOR "TBZ2")
   set(CPACK_PACKAGE_DESCRIPTION_FILE ${MCHECKSUM_SOURCE_DIR}/README.md)
-  set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/COPYING)
+  set(CPACK_RESOURCE_FILE_LICENSE ${MCHECKSUM_SOURCE_DIR}/LICENSE.txt)
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${MCHECKSUM_PACKAGE_DESCRIPTION})
   set(CPACK_PACKAGE_NAME ${MCHECKSUM_PACKAGE_NAME})
   set(CPACK_PACKAGE_VENDOR ${MCHECKSUM_PACKAGE_VENDOR})
@@ -342,6 +348,7 @@ if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
   set(CPACK_SOURCE_IGNORE_FILES
     # Files specific to version control
     "/\\\\.git/"
+    "/\\\\.git$"
     "/\\\\.gitattributes$"
     "/\\\\.github/"
     "/\\\\.gitignore$"
