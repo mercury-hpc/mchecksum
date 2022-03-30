@@ -9,45 +9,24 @@
 
 #include "mchecksum_config.h"
 
-#ifdef MCHECKSUM_HAS_HGLOG
-#    include <mercury_log.h>
-#endif
-
 /*****************/
 /* Public Macros */
 /*****************/
 
-#ifdef MCHECKSUM_HAS_HGLOG
-extern MCHECKSUM_PRIVATE HG_LOG_OUTLET_DECL(mchecksum);
-#    define MCHECKSUM_LOG_ERROR(...)                                           \
-        HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_ERROR, __VA_ARGS__)
-#    define MCHECKSUM_LOG_WARNING(...)                                         \
-        HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_WARNING, __VA_ARGS__)
-#    ifdef MCHECKSUM_HAS_DEBUG
-#        define MCHECKSUM_LOG_DEBUG(...)                                       \
-            HG_LOG_WRITE(mchecksum, HG_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#    else
-#        define MCHECKSUM_LOG_DEBUG(...) (void) 0
-#    endif
+#include <stdio.h>
+#define MCHECKSUM_LOG_WRITE(_stream, ...)                                      \
+    do {                                                                       \
+        fprintf(_stream, __VA_ARGS__);                                         \
+        fprintf(_stream, "\n");                                                \
+    } while (0)
+#ifdef MCHECKSUM_HAS_DEBUG
+#    define MCHECKSUM_LOG_ERROR(...)   MCHECKSUM_LOG_WRITE(stderr, __VA_ARGS__)
+#    define MCHECKSUM_LOG_WARNING(...) MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
+#    define MCHECKSUM_LOG_DEBUG(...)   MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
 #else
-#    include <stdio.h>
-#    define MCHECKSUM_LOG_WRITE(_stream, ...)                                  \
-        do {                                                                   \
-            fprintf(_stream, __VA_ARGS__);                                     \
-            fprintf(_stream, "\n");                                            \
-        } while (0)
-#    ifdef MCHECKSUM_HAS_DEBUG
-#        define MCHECKSUM_LOG_ERROR(...)                                       \
-            MCHECKSUM_LOG_WRITE(stderr, __VA_ARGS__)
-#        define MCHECKSUM_LOG_WARNING(...)                                     \
-            MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
-#        define MCHECKSUM_LOG_DEBUG(...)                                       \
-            MCHECKSUM_LOG_WRITE(stdout, __VA_ARGS__)
-#    else
-#        define MCHECKSUM_LOG_ERROR(...)   (void) 0
-#        define MCHECKSUM_LOG_WARNING(...) (void) 0
-#        define MCHECKSUM_LOG_DEBUG(...)   (void) 0
-#    endif
+#    define MCHECKSUM_LOG_ERROR(...)   (void) 0
+#    define MCHECKSUM_LOG_WARNING(...) (void) 0
+#    define MCHECKSUM_LOG_DEBUG(...)   (void) 0
 #endif
 
 /* Branch predictor hints */
