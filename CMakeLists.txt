@@ -220,6 +220,7 @@ function(mchecksum_set_lib_options libtarget libname libtype)
       OUTPUT_NAME_UBSAN          ${LIB_DEBUG_NAME}
       VERSION                    ${LIB_VERSION}
       SOVERSION                  ${API_VERSION}
+      INSTALL_RPATH              ${MCHECKSUM_INSTALL_LIB_DIR}
   )
 
   #----- Use MSVC Naming conventions for Shared Libraries
