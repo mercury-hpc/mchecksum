@@ -209,22 +209,20 @@ endif()
 #------------------------------------------------------------------------------
 set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} PARENT_SCOPE)
 
-# Pkg-config configuration
+#-----------------------------------------------------------------------------
+# For automake compatibility, also provide a pkgconfig file
+#-----------------------------------------------------------------------------
 if(NOT WIN32)
   if(CMAKE_BUILD_TYPE)
     string(TOLOWER ${CMAKE_BUILD_TYPE} lower_cmake_build_type)
   endif()
 
-  # Mchecksum private library dependencies
-  foreach(exported_lib ${MCHECKSUM_EXPORTED_LIBS})
-    if(lower_cmake_build_type MATCHES "debug")
-      get_target_property(MCHECKSUM_LIBRARY ${exported_lib} OUTPUT_NAME_DEBUG)
-    else()
-      get_target_property(MCHECKSUM_LIBRARY ${exported_lib} OUTPUT_NAME_RELEASE)
-    endif()
-    set(MCHECKSUM_LIBRARIES "${MCHECKSUM_LIBRARIES} -l${MCHECKSUM_LIBRARY}")
-  endforeach()
-  set(MCHECKSUM_LIBRARIES ${MCHECKSUM_LIBRARIES} PARENT_SCOPE)
+  # Retrieve Mchecksum library
+  if(lower_cmake_build_type MATCHES "debug")
+    get_target_property(MCHECKSUM_LIBRARY mchecksum OUTPUT_NAME_DEBUG)
+  else()
+    get_target_property(MCHECKSUM_LIBRARY mchecksum OUTPUT_NAME_RELEASE)
+  endif()
 
   # Mchecksum external library dependencies
   # Need to generate -llib if not already passed
@@ -233,28 +231,42 @@ if(NOT WIN32)
     get_filename_component(lib_name ${lib_dep} NAME_WE)
     if(lib_name MATCHES "^-l")
       # lib_name found is -lxxx
-      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} ${lib_name})
+      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST
+          ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} ${lib_name})
     else()
       # lib_name is /path/to/lib so get library path and name
       get_filename_component(lib_path ${lib_dep} PATH)
       string(REGEX REPLACE "^lib" "" lib_name ${lib_name})
-      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} -L${lib_path} -l${lib_name})
+      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST
+          ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} -L${lib_path} -l${lib_name})
     endif()
   endforeach()
   if(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
     list(REMOVE_DUPLICATES MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
+    string(REPLACE ";" " "
+           MCHECKSUM_LIB_DEPENDENCIES "${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST}")
   endif()
-  foreach(lib_dep ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST})
-    set(MCHECKSUM_LIB_DEPENDENCIES "${MCHECKSUM_LIB_DEPENDENCIES} ${lib_dep}")
-  endforeach()
-  set(MCHECKSUM_LIB_DEPENDENCIES ${MCHECKSUM_LIB_DEPENDENCIES} PARENT_SCOPE)
 
-  # External include dependencies
+  # External include dependencies (should be rare)
   if(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES)
     list(REMOVE_DUPLICATES MCHECKSUM_EXT_INCLUDE_DEPENDENCIES)
   endif()
   foreach(inc_dep ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
-    set(MCHECKSUM_INCLUDE_DEPENDENCIES "${MCHECKSUM_INCLUDE_DEPENDENCIES} -I${inc_dep}")
+    set(MCHECKSUM_INCLUDE_DEPENDENCIES
+        "${MCHECKSUM_INCLUDE_DEPENDENCIES} -I${inc_dep}")
   endforeach()
-  set(MCHECKSUM_INCLUDE_DEPENDENCIES ${MCHECKSUM_INCLUDE_DEPENDENCIES} PARENT_SCOPE)
+
+  # Configure pkg-config file
+  configure_file(
+    ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}.pc.in
+    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc @ONLY
+  )
+
+  # Install pkg-config file
+  install(
+    FILES
+      ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc
+    DESTINATION
+      ${MCHECKSUM_INSTALL_LIB_DIR}/pkgconfig
+  )
 endif()

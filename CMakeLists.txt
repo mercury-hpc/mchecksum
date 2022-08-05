@@ -315,23 +315,6 @@ install(
 )
 
 #-----------------------------------------------------------------------------
-# For automake compatibility, also a provide a pkgconfig file
-#-----------------------------------------------------------------------------
-if(NOT WIN32)
-  configure_file(
-    ${MCHECKSUM_SOURCE_DIR}/CMake/${MCHECKSUM_PACKAGE}.pc.in
-    ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc @ONLY
-  )
-
-  install(
-    FILES
-      ${MCHECKSUM_BINARY_DIR}/CMakeFiles/${MCHECKSUM_PACKAGE}.pc
-    DESTINATION
-      ${MCHECKSUM_INSTALL_LIB_DIR}/pkgconfig
-  )
-endif()
-
-#-----------------------------------------------------------------------------
 # CPack
 #-----------------------------------------------------------------------------
 if(NOT MCHECKSUM_EXTERNALLY_CONFIGURED)
