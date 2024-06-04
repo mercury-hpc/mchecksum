@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12.2...3.15 FATAL_ERROR)
 
 # Setup cmake policies.
 foreach(p
@@ -50,9 +50,9 @@ endif()
 
 # Setting this ensures that "make install" will leave rpaths to external
 # libraries intact on "make install". This ensures that one can install a
-# version of Mercury on the build machine without any issues. If this not
+# version of mchecksum on the build machine without any issues. If this not
 # desired, simply specify CMAKE_INSTALL_RPATH_USE_LINK_PATH when configuring
-# Mercury and "make install" will strip all rpaths, which is default behavior.
+# mchecksum and "make install" will strip all rpaths, which is default behavior.
 if(NOT CMAKE_INSTALL_RPATH_USE_LINK_PATH)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
@@ -217,11 +217,22 @@ function(mchecksum_set_lib_options libtarget libname libtype)
       OUTPUT_NAME_MINSIZEREL     ${LIB_RELEASE_NAME}
       OUTPUT_NAME_RELWITHDEBINFO ${LIB_RELEASE_NAME}
       OUTPUT_NAME_ASAN           ${LIB_DEBUG_NAME}
+      OUTPUT_NAME_TSAN           ${LIB_DEBUG_NAME}
       OUTPUT_NAME_UBSAN          ${LIB_DEBUG_NAME}
-      VERSION                    ${LIB_VERSION}
-      SOVERSION                  ${API_VERSION}
-      INSTALL_RPATH              ${MCHECKSUM_INSTALL_LIB_DIR}
   )
+  if(${libtype} MATCHES "SHARED")
+    set_target_properties(${libtarget}
+        PROPERTIES
+        INSTALL_RPATH              ${MCHECKSUM_INSTALL_LIB_DIR}
+        INSTALL_NAME_DIR           ${MCHECKSUM_INSTALL_LIB_DIR}
+        VERSION                    ${MCHECKSUM_VERSION}.${MCHECKSUM_VERSION_PATCH}
+        SOVERSION                  ${MCHECKSUM_VERSION_MAJOR}
+    )
+  endif()
+
+  if(MSVC)
+    target_compile_definitions(${libtarget} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
+  endif()
 
   #----- Use MSVC Naming conventions for Shared Libraries
   if(MINGW AND ${libtype} MATCHES "SHARED")
@@ -234,9 +245,76 @@ function(mchecksum_set_lib_options libtarget libname libtype)
   endif()
 endfunction()
 
+#-----------------------------------------------------------------------------
+function(mchecksum_get_pc_lib_name output_var lib_target)
+  if(CMAKE_BUILD_TYPE)
+    string(TOLOWER ${CMAKE_BUILD_TYPE} lower_cmake_build_type)
+  endif()
+  if(lower_cmake_build_type MATCHES "debug")
+    get_target_property(${output_var} ${lib_target} OUTPUT_NAME_DEBUG)
+  else()
+    get_target_property(${output_var} ${lib_target} OUTPUT_NAME_RELEASE)
+  endif()
+  set(${output_var} "${${output_var}}" PARENT_SCOPE)
+endfunction()
+
+#-----------------------------------------------------------------------------
+function(mchecksum_get_pc_inc_deps output_var inc_deps)
+  foreach(inc_dep ${inc_deps})
+    set(${output_var} "${${output_var}} -I${inc_dep}")
+  endforeach()
+  set(${output_var} "${${output_var}}" PARENT_SCOPE)
+endfunction()
+
+#-----------------------------------------------------------------------------
+function(mchecksum_get_pc_lib_deps output_var lib_deps)
+  # Need to generate -llib if not already passed
+  foreach(lib_dep ${lib_deps})
+    # get library name
+    get_filename_component(lib_name ${lib_dep} NAME_WE)
+    if(lib_name MATCHES "^-l" OR lib_name MATCHES "-pthread")
+      # lib_name found is -lxxx
+      set(deps_list ${deps_list} ${lib_name})
+    else()
+      # lib_name is /path/to/lib so get library path and name
+      get_filename_component(lib_path ${lib_dep} PATH)
+      if(lib_path)
+        set(deps_list ${deps_list} -L${lib_path})
+      endif()
+      string(REGEX REPLACE "^lib" "" lib_name ${lib_name})
+      set(deps_list ${deps_list} "-l${lib_name}")
+    endif()
+  endforeach()
+  if(deps_list)
+    list(REMOVE_DUPLICATES deps_list)
+    string(REPLACE ";" " " ${output_var} "${deps_list}")
+  endif()
+  set(${output_var} "${${output_var}}" PARENT_SCOPE)
+endfunction()
+
+#-----------------------------------------------------------------------------
 # Avoid explicitly including system include paths
 set(MCHECKSUM_SYSTEM_INCLUDE_PATH ${CMAKE_SYSTEM_INCLUDE_PATH}
   ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES})
+function(mchecksum_clean_include_path path_list)
+  if(${path_list})
+    foreach(item ${MCHECKSUM_SYSTEM_INCLUDE_PATH})
+      list(REMOVE_ITEM ${path_list} ${item})
+    endforeach()
+  endif()
+  set(${path_list} "${${path_list}}" PARENT_SCOPE)
+endfunction()
+
+set(MCHECKSUM_SYSTEM_LIBRARY_PATH ${CMAKE_SYSTEM_LIBRARY_PATH}
+  ${CMAKE_C_IMPLICIT_LINK_DIRECTORIES})
+function(mchecksum_clean_library_path path_list)
+  if(${path_list})
+    foreach(item ${MCHECKSUM_SYSTEM_LIBRARY_PATH})
+      list(REMOVE_ITEM ${path_list} ${item})
+    endforeach()
+  endif()
+  set(${path_list} "${${path_list}}" PARENT_SCOPE)
+endfunction()
 
 #-----------------------------------------------------------------------------
 # Coverage

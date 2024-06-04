@@ -13,20 +13,16 @@ set(MCHECKSUM_BUILD_INCLUDE_DEPENDENCIES
 option(MCHECKSUM_USE_ZLIB "Use ZLIB checksum." OFF)
 if(MCHECKSUM_USE_ZLIB)
   find_package(ZLIB REQUIRED)
-  if(ZLIB_FOUND)
-    message(STATUS "ZLIB include directory: ${ZLIB_INCLUDE_DIRS}")
-    set(MCHECKSUM_HAS_ZLIB 1)
-    set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES
-      ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
-      ${ZLIB_INCLUDE_DIRS}
-    )
-    set(MCHECKSUM_EXT_LIB_DEPENDENCIES
-      ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
-      ${ZLIB_LIBRARIES}
-    )
-  else()
-    message(FATAL_ERROR "Could not find ZLIB, please check ZLIB_INCLUDE_DIRS.")
-  endif()
+  message(STATUS "ZLIB include directory: ${ZLIB_INCLUDE_DIRS}")
+  set(MCHECKSUM_HAS_ZLIB 1)
+  set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES
+    ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
+    ${ZLIB_INCLUDE_DIRS}
+  )
+  set(MCHECKSUM_INT_LIB_DEPENDENCIES
+    ${MCHECKSUM_INT_LIB_DEPENDENCIES}
+    ${ZLIB_LIBRARIES}
+  )
 endif()
 
 # SSE 4.2
@@ -53,20 +49,16 @@ endif(MCHECKSUM_USE_SSE4_2)
 option(MCHECKSUM_USE_ISAL "Use Intel(R) ISA-L library." OFF)
 if(MCHECKSUM_USE_ISAL)
   find_package(ISAL REQUIRED)
-  if(ISAL_FOUND)
-    message(STATUS "ISA-L include directory: ${ISAL_INCLUDE_DIRS}")
-    set(MCHECKSUM_HAS_ISAL 1)
-    set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES
-      ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
-      ${ISAL_INCLUDE_DIRS}
-    )
-    set(MCHECKSUM_EXT_LIB_DEPENDENCIES
-      ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
-      ${ISAL_LIBRARIES}
-    )
-  else()
-    message(FATAL_ERROR "Could not find ISAL, please check ISAL_INCLUDE_DIRS.")
-  endif()
+  message(STATUS "ISA-L include directory: ${ISAL_INCLUDE_DIRS}")
+  set(MCHECKSUM_HAS_ISAL 1)
+  set(MCHECKSUM_INT_INCLUDE_DEPENDENCIES
+    ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
+    ${ISAL_INCLUDE_DIRS}
+  )
+  set(MCHECKSUM_INT_LIB_DEPENDENCIES
+    ${MCHECKSUM_INT_LIB_DEPENDENCIES}
+    ${ISAL_LIBRARIES}
+  )
 endif()
 
 #------------------------------------------------------------------------------
@@ -121,11 +113,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/mchecksum_plugin.h
 #----------------------------------------------------------------------------
 
 # Clean up system include path first
-foreach(item ${MCHECKSUM_SYSTEM_INCLUDE_PATH})
-  if(MCHECKSUM_INT_INCLUDE_DEPENDENCIES)
-    list(REMOVE_ITEM MCHECKSUM_INT_INCLUDE_DEPENDENCIES ${item})
-  endif()
-endforeach()
+mchecksum_clean_include_path(MCHECKSUM_INT_INCLUDE_DEPENDENCIES)
+mchecksum_clean_include_path(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES)
 
 # mchecksum
 add_library(mchecksum ${MCHECKSUM_SRCS}
@@ -136,10 +125,12 @@ target_include_directories(mchecksum
            $<INSTALL_INTERFACE:${MCHECKSUM_INSTALL_INCLUDE_INTERFACE}>
 )
 target_include_directories(mchecksum
-  SYSTEM PRIVATE ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
+  SYSTEM PUBLIC   ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}
+         PRIVATE  ${MCHECKSUM_INT_INCLUDE_DEPENDENCIES}
 )
 target_link_libraries(mchecksum
-  ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
+  PUBLIC  ${MCHECKSUM_EXT_LIB_DEPENDENCIES}
+  PRIVATE ${MCHECKSUM_INT_LIB_DEPENDENCIES}
 )
 mchecksum_set_lib_options(mchecksum "mchecksum" ${MCHECKSUM_LIBTYPE})
 if(MCHECKSUM_ENABLE_COVERAGE)
@@ -213,48 +204,20 @@ set(MCHECKSUM_HASH_TYPES ${MCHECKSUM_HASH_TYPES} PARENT_SCOPE)
 # For automake compatibility, also provide a pkgconfig file
 #-----------------------------------------------------------------------------
 if(NOT WIN32)
-  if(CMAKE_BUILD_TYPE)
-    string(TOLOWER ${CMAKE_BUILD_TYPE} lower_cmake_build_type)
-  endif()
-
   # Retrieve Mchecksum library
-  if(lower_cmake_build_type MATCHES "debug")
-    get_target_property(MCHECKSUM_LIBRARY mchecksum OUTPUT_NAME_DEBUG)
-  else()
-    get_target_property(MCHECKSUM_LIBRARY mchecksum OUTPUT_NAME_RELEASE)
-  endif()
+  mchecksum_get_pc_lib_name(MCHECKSUM_PC_LIBRARY mchecksum)
 
-  # Mchecksum external library dependencies
-  # Need to generate -llib if not already passed
-  foreach(lib_dep ${MCHECKSUM_EXT_LIB_DEPENDENCIES})
-    # get library name
-    get_filename_component(lib_name ${lib_dep} NAME_WE)
-    if(lib_name MATCHES "^-l")
-      # lib_name found is -lxxx
-      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST
-          ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} ${lib_name})
-    else()
-      # lib_name is /path/to/lib so get library path and name
-      get_filename_component(lib_path ${lib_dep} PATH)
-      string(REGEX REPLACE "^lib" "" lib_name ${lib_name})
-      set(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST
-          ${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST} -L${lib_path} -l${lib_name})
-    endif()
-  endforeach()
-  if(MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
-    list(REMOVE_DUPLICATES MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST)
-    string(REPLACE ";" " "
-           MCHECKSUM_LIB_DEPENDENCIES "${MCHECKSUM_EXT_LIB_DEPENDENCIES_LIST}")
-  endif()
+  # Internal library dependencies
+  mchecksum_get_pc_lib_deps(MCHECKSUM_PC_INT_LIB_DEPENDENCIES "${MCHECKSUM_INT_LIB_DEPENDENCIES}")
 
-  # External include dependencies (should be rare)
+  # External library dependencies
+  mchecksum_get_pc_lib_deps(MCHECKSUM_PC_LIB_DEPENDENCIES "${MCHECKSUM_EXT_LIB_DEPENDENCIES}")
+
+  # External include dependencies
   if(MCHECKSUM_EXT_INCLUDE_DEPENDENCIES)
     list(REMOVE_DUPLICATES MCHECKSUM_EXT_INCLUDE_DEPENDENCIES)
+    mchecksum_get_pc_inc_deps(MCHECKSUM_PC_INCLUDE_DEPENDENCIES "${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES}")
   endif()
-  foreach(inc_dep ${MCHECKSUM_EXT_INCLUDE_DEPENDENCIES})
-    set(MCHECKSUM_INCLUDE_DEPENDENCIES
-        "${MCHECKSUM_INCLUDE_DEPENDENCIES} -I${inc_dep}")
-  endforeach()
 
   # Configure pkg-config file
   configure_file(
